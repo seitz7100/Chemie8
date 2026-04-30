@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Übungen – Klasse 8c</title>
+<script src="data.js"></script>
+<style>
+  :root {
+    --cyan: #00B0F0;
+    --cyan-light: #DDF4FC;
+    --cyan-dark: #0091C7;
+    --dark: #1F4E79;
+    --bg: #F5F8FA;
+    --text: #222;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 24px 60px;
+  }
+
+  .breadcrumb { margin-bottom: 24px; }
+  .breadcrumb a {
+    color: var(--cyan-dark);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb .sep { color: #BBB; margin: 0 6px; }
+  .breadcrumb .current { color: #888; font-size: 14px; }
+
+  /* ZURÜCK-PFEIL — eine Ebene zurück (zur 8c-Startseite) */
+  .zurueck-leiste { margin-bottom: 18px; }
+  .zurueck-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--cyan-dark);
+    background: white;
+    border: 1.5px solid var(--cyan);
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background 0.15s;
+  }
+  .zurueck-link:hover { background: var(--cyan-light); }
+  .zurueck-link:active { background: var(--cyan-light); }
+
+  .header {
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 3px solid var(--cyan);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header .icon { font-size: 32px; }
+  .header h1 {
+    color: var(--dark);
+    font-size: 24px;
+    margin: 0;
+    flex: 1;
+  }
+  .header .klasse-badge {
+    background: var(--cyan);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  .group { margin-bottom: 32px; }
+  .group-title {
+    color: var(--cyan-dark);
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #E0E8EE;
+  }
+
+  /* ÜBUNG-CARDS - größer als ABs, weil interaktiver */
+  .ueb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .ueb-card {
+    background: white;
+    border: 1.5px solid #E0E8EE;
+    border-radius: 12px;
+    padding: 22px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ueb-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--cyan);
+  }
+  .ueb-card:hover {
+    border-color: var(--cyan);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(0,176,240,0.14);
+  }
+  .ueb-card:active { background: var(--cyan-light); }
+
+  .ueb-icon {
+    width: 52px; height: 52px;
+    background: var(--cyan-light);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+  }
+  .ueb-title {
+    color: var(--dark);
+    font-weight: bold;
+    font-size: 17px;
+  }
+  .ueb-desc {
+    color: #555;
+    font-size: 14px;
+    line-height: 1.5;
+    flex: 1;
+  }
+  .ueb-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .tag {
+    background: var(--cyan-light);
+    color: var(--cyan-dark);
+    padding: 3px 10px;
+    border-radius: 8px;
+    font-weight: bold;
+  }
+  .tag.level {
+    background: #FFF4D6;
+    color: #8B6F00;
+  }
+
+  .ueb-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--cyan-dark);
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 6px;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .loading { text-align: center; padding: 40px; color: #999; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="zurueck-leiste">
+    <a href="index.html" class="zurueck-link">← Zurück zur Startseite</a>
+  </div>
+
+  <div class="breadcrumb">
+    <a href="../">Klassen</a>
+    <span class="sep">›</span>
+    <a href="index.html">8c</a>
+    <span class="sep">›</span>
+    <span class="current">Übungen</span>
+  </div>
+
+  <div class="header">
+    <div class="icon">🎯</div>
+    <h1>Übungen</h1>
+    <div class="klasse-badge">8c</div>
+  </div>
+
+  <div id="content" class="loading">Lade Übungen …</div>
+
+</div>
+
+<script>
+  (function() {
+    try {
+      const data = window.PORTAL_DATA || {};
+      const uebs = data.uebungen || [];
+      const container = document.getElementById('content');
+
+      if (uebs.length === 0) {
+        container.className = 'empty';
+        container.innerHTML = `
+          <div class="empty-icon">📭</div>
+          <div>Noch keine Übungen verfügbar.</div>
+        `;
+        return;
+      }
+
+      const groups = {};
+      uebs.forEach(u => {
+        const lb = u.lernbereich || 'Sonstiges';
+        if (!groups[lb]) groups[lb] = [];
+        groups[lb].push(u);
+      });
+
+      const sortedKeys = Object.keys(groups).sort();
+
+      container.className = '';
+      container.innerHTML = sortedKeys.map(lb => `
+        <div class="group">
+          <div class="group-title">${escape(lb)} ${groups[lb][0].thema ? '· ' + escape(groups[lb][0].thema) : ''}</div>
+          <div class="ueb-grid">
+            ${groups[lb].map(u => renderCard(u)).join('')}
+          </div>
+        </div>
+      `).join('');
+    } catch(err) {
+      document.getElementById('content').innerHTML =
+        '<div class="empty"><div class="empty-icon">⚠</div><div>Konnte Übungen nicht laden.</div></div>';
+      console.error(err);
+    }
+  })();
+
+  function renderCard(u) {
+    return `
+      <a href="${escape(u.datei)}" class="ueb-card">
+        <div class="ueb-icon">🎯</div>
+        <div class="ueb-title">${escape(u.titel)}</div>
+        ${u.beschreibung ? `<div class="ueb-desc">${escape(u.beschreibung)}</div>` : ''}
+        <div class="ueb-meta">
+          ${u.lernbereich ? `<span class="tag">${escape(u.lernbereich)}</span>` : ''}
+          ${u.level ? `<span class="tag level">${escape(u.level)}</span>` : ''}
+        </div>
+        <div class="ueb-cta">Übung starten ›</div>
+      </a>
+    `;
+  }
+
+  function escape(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
+  }
+</script>
+
+</body>
+</html>

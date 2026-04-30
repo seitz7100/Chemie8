@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klasse 8c – Chemie</title>
+<script src="data.js"></script>
+<script src="../shared/scorm-adapter.js"></script>
+<style>
+  :root {
+    --cyan: #00B0F0;
+    --cyan-light: #DDF4FC;
+    --cyan-dark: #0091C7;
+    --dark: #1F4E79;
+    --bg: #F5F8FA;
+    --text: #222;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
+
+  /* BREADCRUMB */
+  .breadcrumb {
+    margin-bottom: 30px;
+  }
+  .breadcrumb a {
+    color: var(--cyan-dark);
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .breadcrumb a:hover { text-decoration: underline; }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+  .header .badge {
+    display: inline-block;
+    background: var(--cyan);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .header h1 {
+    color: var(--dark);
+    font-size: 26px;
+    margin: 0 0 8px;
+  }
+  .header p {
+    color: #666;
+    margin: 0;
+  }
+
+  .question {
+    text-align: center;
+    color: var(--cyan-dark);
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 24px;
+  }
+
+  /* CHOICE CARDS */
+  .choice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .choice-card {
+    background: white;
+    border: 2px solid #E0E8EE;
+    border-radius: 14px;
+    padding: 32px 24px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    display: block;
+    text-align: center;
+  }
+  .choice-card:hover {
+    border-color: var(--cyan);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(0,176,240,0.14);
+  }
+  .choice-card:active {
+    transform: translateY(0);
+    background: var(--cyan-light);
+  }
+  .choice-card .icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+  .choice-card .title {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+  .choice-card .desc {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+  }
+  .choice-card .count {
+    margin-top: 14px;
+    display: inline-block;
+    background: var(--cyan-light);
+    color: var(--cyan-dark);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="badge">Klasse 8c</div>
+    <h1>Was möchtest du heute machen?</h1>
+    <p>Schuljahr 2025/26</p>
+  </div>
+
+  <div class="question">Wähle einen Bereich</div>
+
+  <div class="choice-grid">
+
+    <a href="arbeitsblaetter.html" class="choice-card">
+      <div class="icon">📄</div>
+      <div class="title">Arbeitsblätter</div>
+      <div class="desc">Interaktive Arbeitsblätter mit Simulationen und Pencil-Eingabe.<br>Notizen werden gespeichert, PDF-Export möglich.</div>
+      <div class="count" id="count-ab">…</div>
+    </a>
+
+    <a href="uebungen.html" class="choice-card">
+      <div class="icon">🎯</div>
+      <div class="title">Übungen</div>
+      <div class="desc">Trainings-Tools mit Selbstkontrolle.<br>Übe in deinem Tempo mit Hinweisen und Streak-Zählung.</div>
+      <div class="count" id="count-ueb">…</div>
+    </a>
+
+  </div>
+
+  <!-- "Stunde abschließen"-Bereich: erscheint, wenn etwas erledigt wurde -->
+  <div id="finish-bar" style="display:none; margin-top:30px; padding:20px; background:white; border:2px solid #00B0F0; border-radius:12px; text-align:center;">
+    <div style="font-weight:bold; color:#1F4E79; margin-bottom:8px;" id="finish-summary">Du hast Aufgaben bearbeitet</div>
+    <div style="color:#666; font-size:14px; margin-bottom:14px;">Klicke auf den Button, um deine Stunde abzuschließen. Deine Lehrkraft sieht dann einen grünen Haken in mebis.</div>
+    <button id="btn-stunde-abschliessen" style="background:#2E7D32; color:white; border:none; padding:12px 28px; font-size:15px; font-weight:bold; border-radius:8px; cursor:pointer; font-family:Arial,sans-serif;">✓ Stunde abschließen</button>
+  </div>
+
+</div>
+
+<script>
+  // SCORM verbinden (falls noch nicht durch root/index.html geschehen)
+  if (window.SCORM) {
+    SCORM.init();
+    SCORM.set('cmi.core.lesson_status', 'incomplete');
+    SCORM.commit();
+  }
+
+  // Counter aus data.js
+  try {
+    const data = window.PORTAL_DATA || {};
+    document.getElementById('count-ab').textContent =
+      (data.arbeitsblaetter?.length || 0) + ' verfügbar';
+    document.getElementById('count-ueb').textContent =
+      (data.uebungen?.length || 0) + ' verfügbar';
+  } catch (e) {
+    document.getElementById('count-ab').textContent = '–';
+    document.getElementById('count-ueb').textContent = '–';
+  }
+
+  // "Fertig"-Bereich anzeigen, wenn der Schüler in einem AB auf "abschließen" geklickt hat
+  function aktualisiereFertigBar() {
+    try {
+      const fertig = JSON.parse(localStorage.getItem('chemie_portal_fertig') || '{}');
+      const anzahl = Object.keys(fertig).length;
+      const bar = document.getElementById('finish-bar');
+      if (anzahl > 0) {
+        bar.style.display = 'block';
+        document.getElementById('finish-summary').textContent =
+          `Du hast ${anzahl} ${anzahl === 1 ? 'Aufgabe' : 'Aufgaben'} bearbeitet`;
+      }
+    } catch(e) {}
+  }
+  aktualisiereFertigBar();
+
+  document.getElementById('btn-stunde-abschliessen').addEventListener('click', () => {
+    if (!confirm('Stunde wirklich abschließen?\n\nDeine Lehrkraft sieht dann einen grünen Haken. Du kannst danach trotzdem noch weiterarbeiten.')) return;
+
+    if (window.SCORM && SCORM.isActive()) {
+      SCORM.set('cmi.core.lesson_status', 'completed');
+      SCORM.commit();
+    }
+    alert('Stunde abgeschlossen! Du kannst das Fenster jetzt schließen.');
+  });
+
+  // Beim Verlassen: SCORM-Session sauber beenden
+  window.addEventListener('beforeunload', () => {
+    if (window.SCORM && SCORM.isActive()) {
+      SCORM.commit();
+      // finish() nur am echten Ende, nicht bei jeder Navigation innerhalb
+      // des SCOs – mebis hält die Session über window.parent ohnehin offen.
+    }
+  });
+</script>
+
+</body>
+</html>

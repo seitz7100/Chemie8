@@ -1,0 +1,2293 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stöchio-Trainer 8c — AvH</title>
+<style>
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;  /* keine graue/blaue Markierung beim Antippen (auch nicht bei Handballen) */
+    /* GLOBAL: nichts kann mehr markiert werden — verhindert jede Form von
+       blauer Hervorhebung durch Pencil-Fehlberührungen. */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  /* Buttons in der Schritt-Karte und in canvas-tools dürfen nicht durch Long-Press
+     (Handballen) markiert oder via Kontext-Menü kopiert werden.
+     Außerdem touch-action: manipulation → kein Zoom-Verhalten beim Doppeltippen. */
+  .schritt button, .canvas-tools button, .vergleich-btn, .selbst-btn,
+  .hilfe-btn, .schritt-hilfe-btn, .formel-btn, .end-btn {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+    outline: none;
+  }
+  /* Visuelle Highlights nur für echte Maus-Interaktion (hover funktioniert auf
+     Touch-Geräten gar nicht) — :active wird auf Touch-Geräten ungewollt durch
+     den Handballen ausgelöst und sieht dann aus wie "ausgewählt". */
+  @media (hover: none) {
+    .schritt button:active, .canvas-tools button:active,
+    .vergleich-btn:active, .selbst-btn:active, .hilfe-btn:active,
+    .schritt-hilfe-btn:active, .formel-btn:active, .end-btn:active {
+      background: inherit !important;
+      transform: none !important;
+    }
+  }
+  /* SELECTION-SCHUTZ: Im gesamten Schritt- und Aufgabenbereich darf
+     iOS nichts blau markieren — verhindert, dass knappe Pencil-Treffer
+     neben der Canvas Texte oder Buttons hervorheben. */
+  .schritt, .schritt *,
+  .aufgabe-text,
+  .canvas-wrapper, .canvas-wrapper *,
+  .canvas-tools, .canvas-tools * {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  /* Während aktiv mit Pen gezeichnet wird, body-weit jede Selection
+     blockieren — Sicherheitsnetz für Bereiche außerhalb der Canvas. */
+  body.pen-aktiv, body.pen-aktiv * {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
+  /* Pen-Schutzrand: schmaler unsichtbarer Streifen direkt unter der
+     Canvas, oberhalb der Toolbar. Fängt knappe Fehlberührungen mit dem
+     Pencil ab, damit kein Toolbar-Button hervorgehoben wird. */
+  .pen-puffer {
+    height: 6px;
+    background: transparent;
+    touch-action: none;
+  }
+  html, body { margin: 0; padding: 0; min-height: 100vh; }
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #F5F1E8;
+    color: #2D2A26;
+    line-height: 1.6;
+    padding: 20px;
+  }
+  h1, h2, h3 { font-family: 'DM Serif Display', Georgia, serif; font-weight: 400; margin: 0; }
+  h1 { font-size: 2rem; color: #5C4033; }
+  h2 { font-size: 1.4rem; color: #5C4033; margin-bottom: 8px; }
+  h3 { font-size: 1.1rem; color: #5C4033; }
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  .topbar {
+    background: #FFFBF2;
+    border: 1px solid #D9CFB8;
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .topbar-left { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .progress { font-size: 0.95rem; color: #6B5D4A; }
+  .stats { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .stat { background: #F5EDD8; padding: 6px 14px; border-radius: 8px; font-size: 0.9rem; color: #5C4033; }
+  .stat strong { font-size: 1.1rem; color: #2D2A26; }
+  .stat.streak { background: #FBE8D0; color: #8B5A2B; }
+  .topbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .formel-btn, .end-btn {
+    color: #FFFBF2;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .formel-btn { background: #5C8A4F; }
+  .formel-btn:hover { background: #466b3c; }
+  .end-btn { background: #8B5A2B; }
+  .end-btn:hover { background: #6B3F1A; }
+
+  .card { background: #FFFBF2; border: 1px solid #D9CFB8; border-radius: 14px; padding: 28px; margin-bottom: 20px; }
+  .aufgabe-nr { font-size: 0.85rem; color: #8C7A5C; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .aufgabe-text { font-size: 1.1rem; line-height: 1.7; color: #2D2A26; background: #F9F2DF; padding: 16px 20px; border-radius: 10px; border-left: 4px solid #B8A878; margin-bottom: 22px; }
+
+  .schritt {
+    margin-bottom: 22px;
+    padding: 18px;
+    background: #FBF7EA;
+    border-radius: 10px;
+    border: 1px solid #E8DEC4;
+    transition: opacity 0.3s, border-color 0.3s, background 0.3s;
+  }
+  .schritt.locked { opacity: 0.45; pointer-events: none; }
+  .schritt.aktiv { border-color: #B8A878; background: #FFFBF2; }
+  .schritt.geloest { border-color: #5C8A4F; background: #F4F8EC; }
+
+  .schritt-titel { font-weight: 500; color: #5C4033; margin-bottom: 6px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+  .schritt-nr { background: #B8A878; color: #FFFBF2; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 500; }
+  .schritt.geloest .schritt-nr { background: #5C8A4F; }
+  .schritt-frage { color: #6B5D4A; font-size: 0.95rem; margin-bottom: 12px; }
+
+  .canvas-tools { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+  .tool-btn { background: #FFFBF2; border: 1px solid #D9CFB8; padding: 4px 10px; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; color: #5C4033; cursor: pointer; }
+  .tool-btn:hover { background: #F5EDD8; }
+  .tool-btn.aktiv { background: #B8A878; color: #FFFBF2; border-color: #B8A878; }
+  .tool-btn.groesse { background: #E8DEC4; }
+  .tool-btn.groesse:hover { background: #D9CFB8; }
+
+  .canvas-wrapper { position: relative; background: #FFFBF2; border: 1px dashed #B8A878; border-radius: 10px; overflow: hidden; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .canvas-wrapper.gesperrt { border-style: solid; border-color: #5C8A4F; background: #F4F8EC; }
+  canvas.zeichnen { display: block; width: 100%; touch-action: none; cursor: crosshair; -webkit-user-select: none; user-select: none; }
+  canvas.zeichnen.gesperrt { cursor: not-allowed; }
+
+  .schritt-actions { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .vergleich-btn { background: #5C8A4F; color: #FFFBF2; border: none; padding: 9px 18px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; cursor: pointer; }
+  .vergleich-btn:hover:not(:disabled) { background: #466b3c; }
+  .vergleich-btn:disabled { background: #B8A878; cursor: not-allowed; opacity: 0.7; }
+  .canvas-hinweis { font-size: 0.85rem; color: #8C7A5C; font-style: italic; }
+
+  .musterloesung { margin-top: 14px; background: #FFF7E5; border: 1px solid #E8C896; border-radius: 10px; padding: 14px 18px; }
+  .musterloesung-titel { font-size: 0.85rem; color: #8B5A2B; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; font-weight: 500; }
+  .musterloesung-text { font-size: 1rem; color: #2D2A26; line-height: 1.6; white-space: pre-line; }
+
+  .selbsteinschaetzung { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .selbst-btn { border: 1.5px solid; padding: 10px 20px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; cursor: pointer; background: #FFFBF2; }
+  .selbst-btn.richtig { border-color: #5C8A4F; color: #3F6230; }
+  .selbst-btn.richtig:hover { background: #DCEAD0; }
+  .selbst-btn.falsch { border-color: #C97559; color: #8B3A2A; }
+  .selbst-btn.falsch:hover { background: #F4D9D5; }
+
+  .hilfe-bereich { margin-bottom: 22px; text-align: right; }
+  .hilfe-btn { background: #FBE8D0; color: #8B5A2B; border: 1px solid #E8C896; padding: 8px 16px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; cursor: pointer; }
+  .hilfe-btn:hover { background: #F5D9B0; }
+  .hilfe-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .hilfe-anzeige { margin-top: 12px; text-align: left; }
+  .hilfe-karte { background: #FFF7E5; border-left: 4px solid #E8C896; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; font-size: 0.95rem; color: #5C4033; }
+  .hilfe-karte.auto-eingeblendet { border-left-color: #C97559; background: #FCEFEA; }
+  .hilfe-titel { font-weight: 500; color: #8B5A2B; margin-bottom: 4px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .nav { display: flex; justify-content: space-between; margin-top: 24px; }
+  .nav-btn { background: #5C4033; color: #FFFBF2; border: none; padding: 12px 28px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 1rem; cursor: pointer; }
+  .nav-btn:hover { background: #3F2B22; }
+  .nav-btn:disabled { background: #B8A878; cursor: not-allowed; }
+  .nav-btn.zurueck { background: #B8A878; }
+  .nav-btn.zurueck:hover { background: #8C7A5C; }
+
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(45, 42, 38, 0.6); display: none; align-items: flex-start; justify-content: center; z-index: 100; padding: 40px 20px; overflow-y: auto; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #FFFBF2; border-radius: 14px; padding: 32px; max-width: 1000px; width: 100%; margin: auto; }
+  .modal h2 { margin-bottom: 16px; }
+  .modal-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .modal-stat { background: #F9F2DF; border-radius: 10px; padding: 16px; text-align: center; }
+  .modal-stat-label { font-size: 0.85rem; color: #6B5D4A; text-transform: uppercase; letter-spacing: 0.04em; }
+  .modal-stat-wert { font-family: 'DM Serif Display', serif; font-size: 2.2rem; color: #5C4033; margin-top: 4px; }
+
+  .ergebnis-aufgabe { margin-top: 20px; border-top: 1px solid #E8DEC4; padding-top: 18px; }
+  .ergebnis-aufgabe-titel { font-weight: 500; color: #5C4033; margin-bottom: 6px; font-size: 1rem; }
+  .ergebnis-aufgabe-text { font-size: 0.9rem; color: #6B5D4A; margin-bottom: 12px; font-style: italic; }
+  .ergebnis-schritt { background: #FBF7EA; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; display: grid; grid-template-columns: 140px 1fr 110px; gap: 12px; align-items: center; }
+  .ergebnis-schritt-label { font-size: 0.85rem; color: #6B5D4A; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; }
+  .ergebnis-schritt-bild { background: #FFFBF2; border: 1px solid #D9CFB8; border-radius: 6px; max-height: 240px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 4px; }
+  .ergebnis-schritt-bild img { max-width: 100%; max-height: 230px; }
+  .ergebnis-schritt-bild.leer { color: #B8A878; font-size: 0.85rem; padding: 18px; font-style: italic; }
+  .ergebnis-status { text-align: right; font-size: 0.85rem; }
+  .ergebnis-status.korrekt { color: #3F6230; font-weight: 500; }
+  .ergebnis-status.falsch { color: #8B3A2A; font-weight: 500; }
+  .ergebnis-status.uebersprungen { color: #B8A878; font-style: italic; }
+  .ergebnis-zeit { font-size: 0.75rem; color: #8C7A5C; display: block; margin-top: 2px; }
+  .modal-footer { margin-top: 24px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .export-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* Startbildschirm */
+  #startbildschirm { text-align: center; padding: 40px 20px; }
+  #startbildschirm h1 { margin-bottom: 6px; }
+  .schul-name { font-size: 0.95rem; color: #8C7A5C; margin-bottom: 20px; letter-spacing: 0.05em; }
+  .gruss { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: #5C4033; margin: 24px 0 16px; }
+  #startbildschirm p { color: #6B5D4A; max-width: 600px; margin: 0 auto 24px; }
+  .name-eingabe {
+    margin: 24px auto;
+    max-width: 320px;
+    text-align: left;
+  }
+  .name-eingabe label { display: block; font-size: 0.9rem; color: #6B5D4A; margin-bottom: 6px; font-weight: 500; }
+  .name-eingabe input {
+    width: 100%;
+    border: 1px solid #D9CFB8;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    background: #FFFBF2;
+  }
+  .name-eingabe input:focus { outline: none; border-color: #8B5A2B; box-shadow: 0 0 0 2px rgba(139, 90, 43, 0.15); }
+  .start-btn { background: #5C8A4F; color: #FFFBF2; border: none; padding: 14px 36px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 1.1rem; cursor: pointer; }
+  .start-btn:hover { background: #466b3c; }
+  .start-btn:disabled { background: #B8A878; cursor: not-allowed; }
+
+  /* Formel-Modal */
+  .formel-modal-inhalt { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 16px 0; }
+  .formel-block { text-align: center; }
+  .formel-block h3 { margin-bottom: 12px; color: #5C4033; }
+  .formel-dreieck {
+    background: #F9F2DF;
+    border: 2px solid #B8A878;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 0 auto 12px;
+    max-width: 280px;
+  }
+  .dreieck-svg { width: 100%; max-width: 220px; height: auto; }
+  .formel-erklaerung { font-size: 0.9rem; color: #6B5D4A; line-height: 1.6; text-align: left; max-width: 280px; margin: 0 auto; }
+  .formel-erklaerung code { background: #F5EDD8; padding: 2px 6px; border-radius: 4px; font-family: 'Menlo', monospace; }
+
+  .versteckt { display: none !important; }
+  sub, sup { font-size: 0.75em; }
+
+  @media (max-width: 700px) {
+    .modal-stats { grid-template-columns: 1fr; }
+    .topbar { flex-direction: column; align-items: stretch; }
+    .ergebnis-schritt { grid-template-columns: 1fr; }
+    .formel-modal-inhalt { grid-template-columns: 1fr; }
+  }
+
+  /* ZURÜCK-LEISTE — führt eine Ebene zurück (zur Übungen-Übersicht) */
+  .zurueck-leiste {
+    margin-bottom: 16px;
+  }
+  .zurueck-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #5C4033;
+    background: #FFFBF2;
+    border: 1px solid #D9CFB8;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .zurueck-link:hover {
+    background: #F4ECD8;
+    border-color: #B8A878;
+  }
+  .zurueck-link:active {
+    background: #E8DEC4;
+  }
+  /* FARBPALETTE im Trainer */
+  .farbpalette {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    padding: 4px 8px;
+    border-left: 1px solid #D8C9A8;
+    margin-left: 4px;
+  }
+  .farb-btn {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.25);
+    cursor: pointer;
+    padding: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+  }
+  .farb-btn.aktiv {
+    box-shadow: 0 0 0 2px #5C8A4F;
+    transform: scale(1.15);
+  }
+  .farb-btn:active { transform: scale(0.95); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Zurück zur Übungen-Übersicht — auf jedem Bildschirm sichtbar -->
+  <div class="zurueck-leiste">
+    <a href="../uebungen.html" class="zurueck-link" id="zurueck-uebersicht">← Zurück zur Übersicht</a>
+  </div>
+
+  <!-- Startbildschirm -->
+  <div id="startbildschirm" class="card">
+    <h1>Stöchio-Trainer</h1>
+    <div class="schul-name">Alexander-von-Humboldt-Gymnasium · Klasse 8c</div>
+    <div class="gruss">Hallo liebe 8c! Herr Seitz freut sich, euch zu sehen. 👋</div>
+    <p>Hier übt ihr das chemische Rechnen Schritt für Schritt.<br><br>
+    Schreibt eure Lösung mit dem Apple Pencil ins Feld. Wenn ihr fertig seid, könnt ihr sie mit der Musterlösung vergleichen und selbst beurteilen, ob ihr richtig lagt. Bei jeder Aufgabe gibt es Tipps, falls ihr nicht weiterkommt.</p>
+
+    <div class="name-eingabe">
+      <label for="schueler-name">Dein Name (für den Export am Ende):</label>
+      <input type="text"
+             id="schueler-name"
+             placeholder="Vorname Nachname"
+             autocomplete="name"
+             autocapitalize="words"
+             autocorrect="off"
+             spellcheck="false"
+             enterkeyhint="go"
+             oninput="pruefeStartBereit()"
+             onkeydown="if(event.key==='Enter' && !document.getElementById('start-btn').disabled){ event.preventDefault(); starten(); }">
+    </div>
+
+    <button class="start-btn" id="start-btn" onclick="starten()" disabled>Los geht's</button>
+  </div>
+
+  <!-- Trainer -->
+  <div id="trainer" class="versteckt">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="progress">Aufgabe <strong id="aktuelle-nr">1</strong> von <strong id="gesamt-nr">12</strong></div>
+        <div class="stats">
+          <div class="stat"><strong id="punkte-anzeige">0</strong> Punkte</div>
+          <div class="stat streak">🔥 <strong id="streak-anzeige">0</strong></div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="formel-btn" onclick="formelnAnzeigen()">📐 Formeln</button>
+        <button class="formel-btn" onclick="trainerKomplettZuruecksetzen()" title="Fortschritt löschen und neu starten" style="background:#fff;color:#A35;border:1px solid #C99;">↺ Neu</button>
+        <button class="end-btn" onclick="uebungenBeenden()">Übungen beenden</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="aufgabe-nr">Aufgabe <span id="header-nr">1</span></div>
+      <div class="aufgabe-text" id="aufgabe-text"></div>
+      <div id="schritte-container"></div>
+
+      <div class="hilfe-bereich">
+        <button class="hilfe-btn" id="hilfe-btn" onclick="hilfeAnzeigen()">💡 Tipp anzeigen</button>
+        <div class="hilfe-anzeige" id="hilfe-anzeige"></div>
+      </div>
+
+      <div class="nav">
+        <button class="nav-btn zurueck" id="zurueck-btn" onclick="vorherigeAufgabe()">← Vorherige</button>
+        <button class="nav-btn" id="weiter-btn" onclick="naechsteAufgabe()" disabled>Nächste Aufgabe →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formel-Modal -->
+  <div class="modal-overlay" id="formel-modal">
+    <div class="modal">
+      <h2>📐 Formel-Dreiecke zum Nachschauen</h2>
+      <div class="formel-modal-inhalt">
+
+        <div class="formel-block">
+          <h3>Masse, Stoffmenge & molare Masse</h3>
+          <div class="formel-dreieck">
+            <svg class="dreieck-svg" viewBox="0 0 220 200" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="110,20 200,180 20,180" fill="#FFFBF2" stroke="#5C4033" stroke-width="2"/>
+              <line x1="65" y1="100" x2="155" y2="100" stroke="#5C4033" stroke-width="2"/>
+              <line x1="110" y1="100" x2="110" y2="180" stroke="#5C4033" stroke-width="2"/>
+              <text x="110" y="78" text-anchor="middle" font-family="DM Serif Display, serif" font-size="32" fill="#5C4033">m</text>
+              <text x="75" y="150" text-anchor="middle" font-family="DM Serif Display, serif" font-size="28" fill="#5C4033">n</text>
+              <text x="145" y="150" text-anchor="middle" font-family="DM Serif Display, serif" font-size="28" fill="#5C4033">M</text>
+            </svg>
+          </div>
+          <div class="formel-erklaerung">
+            <strong>m</strong> = Masse (in g)<br>
+            <strong>n</strong> = Stoffmenge (in mol)<br>
+            <strong>M</strong> = molare Masse (in g/mol)<br><br>
+            <code>m = n · M</code><br>
+            <code>n = m / M</code><br>
+            <code>M = m / n</code>
+          </div>
+        </div>
+
+        <div class="formel-block">
+          <h3>Volumen, Stoffmenge & molares Volumen</h3>
+          <div class="formel-dreieck">
+            <svg class="dreieck-svg" viewBox="0 0 220 200" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="110,20 200,180 20,180" fill="#FFFBF2" stroke="#5C4033" stroke-width="2"/>
+              <line x1="65" y1="100" x2="155" y2="100" stroke="#5C4033" stroke-width="2"/>
+              <line x1="110" y1="100" x2="110" y2="180" stroke="#5C4033" stroke-width="2"/>
+              <text x="110" y="78" text-anchor="middle" font-family="DM Serif Display, serif" font-size="32" fill="#5C4033">V</text>
+              <text x="75" y="150" text-anchor="middle" font-family="DM Serif Display, serif" font-size="28" fill="#5C4033">n</text>
+              <text x="145" y="150" text-anchor="middle" font-family="DM Serif Display, serif" font-size="26" fill="#5C4033">V<tspan font-size="18" baseline-shift="sub">m</tspan></text>
+            </svg>
+          </div>
+          <div class="formel-erklaerung">
+            <strong>V</strong> = Volumen (in L)<br>
+            <strong>n</strong> = Stoffmenge (in mol)<br>
+            <strong>V<sub>m</sub></strong> = molares Volumen (in L/mol)<br><br>
+            <code>V = n · V<sub>m</sub></code><br>
+            <code>n = V / V<sub>m</sub></code><br>
+            <code>V<sub>m</sub> = V / n</code>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <span></span>
+        <button class="nav-btn" onclick="formelModalSchliessen()">Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Endbildschirm -->
+  <div class="modal-overlay" id="end-modal">
+    <div class="modal">
+      <h2>Übersicht deiner Übung</h2>
+      <div class="modal-stats">
+        <div class="modal-stat"><div class="modal-stat-label">Punkte</div><div class="modal-stat-wert" id="end-punkte">0</div></div>
+        <div class="modal-stat"><div class="modal-stat-label">Vollständig gelöst</div><div class="modal-stat-wert" id="end-bearbeitet">0</div></div>
+        <div class="modal-stat"><div class="modal-stat-label">Beste Streak</div><div class="modal-stat-wert" id="end-streak">0</div></div>
+      </div>
+      <h3>Deine Antworten</h3>
+      <p style="color: #6B5D4A; font-size: 0.9rem; margin-bottom: 12px;">Hier siehst du nur die Aufgaben, die du bearbeitet hast.</p>
+      <div id="ergebnis-container"></div>
+      <div class="modal-footer">
+        <button class="nav-btn zurueck" onclick="modalSchliessen()">Weiter üben</button>
+        <div class="export-buttons">
+          <button class="formel-btn" onclick="exportPDF()">📄 Als PDF speichern</button>
+          <button class="formel-btn" onclick="exportJSON()">💾 Als Datei speichern (JSON)</button>
+          <button class="nav-btn" onclick="neuStarten()">Neu starten</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===========================================================
+// AUFGABEN — Aufgaben 1+2 mit 4 Schritten, ab Aufgabe 3 ein einziges großes Canvas
+// ===========================================================
+const AUFGABEN = [
+  {
+    text: "Eine Brausetablette enthält 4,2 g Natriumhydrogencarbonat (NaHCO₃). Berechne die Stoffmenge n(NaHCO₃). [M(NaHCO₃) = 84 g/mol]",
+    modus: "schritte",
+    schritte: [
+      { titel: "Gegeben", frage: "Welche Größen und Werte stehen im Aufgabentext?",
+        loesung: "m(NaHCO₃) = 4,2 g\nM(NaHCO₃) = 84 g/mol",
+        hilfen: [
+          "Lies die Aufgabe nochmal langsam: Welche Zahlen mit Einheiten kommen vor?",
+          "Achte auf die Einheiten: g steht für Masse, g/mol für die molare Masse.",
+          "Du brauchst zwei Werte: einmal die Masse aus dem Fließtext und einmal die molare Masse aus der Klammer. Notiere beide mit dem passenden Stoff in Klammern."
+        ]
+      },
+      { titel: "Gesucht", frage: "Welche Größe willst du berechnen?",
+        loesung: "n(NaHCO₃)",
+        hilfen: [
+          "Schau zum letzten Satz der Aufgabe: Was sollst du berechnen?",
+          "„Stoffmenge\" ist das Schlüsselwort — welches Symbol gehört dazu?",
+          "Das Symbol für die Stoffmenge ist ein kleiner Buchstabe — und du brauchst noch den Stoff in Klammern dahinter."
+        ]
+      },
+      { titel: "Lösungsweg", frage: "Welche Formel benutzt du?",
+        loesung: "n = m / M",
+        hilfen: [
+          "Schau dir das Übersichtsschaubild an: Welche Umrechnungsgröße verbindet m und n?",
+          "Die molare Masse M verbindet m und n. Stelle die Formel m = n · M nach n um.",
+          "Du musst m = n · M nach n umstellen — überlege, durch welche Größe du teilen musst, damit n alleine steht."
+        ]
+      },
+      { titel: "Ergebnis", frage: "Setze die Werte ein und berechne.",
+        loesung: "n = 4,2 g ÷ 84 g/mol\nn = 0,05 mol",
+        hilfen: [
+          "Setze in n = m / M die Werte ein: m = 4,2 g und M = 84 g/mol.",
+          "n = 4,2 g ÷ 84 g/mol — was kommt dabei heraus?",
+          "Rechne 4,2 ÷ 84 mit dem Taschenrechner. Die Einheit g kürzt sich, übrig bleibt mol."
+        ]
+      }
+    ],
+    hilfen: [
+      "Schau dir das Übersichtsschaubild an: Du hast die Masse m und willst zur Stoffmenge n. Welche Umrechnungsgröße verbindet die beiden?",
+      "Die Verbindung zwischen m und n ist die molare Masse M. Die zugehörige Größengleichung lautet: n = m / M.",
+      "Setze in n = m / M die Werte ein und teile mit dem Taschenrechner. Achte auf die Einheiten."
+    ]
+  },
+  {
+    text: "Wie viele Wassermoleküle befinden sich in 36 g Wasser? [M(H₂O) = 18 g/mol; Nₐ = 6,022·10²³ 1/mol]",
+    modus: "schritte",
+    schritte: [
+      { titel: "Gegeben", frage: "Welche Größen und Werte stehen im Aufgabentext?",
+        loesung: "m(H₂O) = 36 g\nM(H₂O) = 18 g/mol\nNₐ = 6,022·10²³ 1/mol",
+        hilfen: [
+          "Drei Werte sind gegeben — ein im Fließtext, zwei in den eckigen Klammern.",
+          "„36 g Wasser\" gibt dir m(H₂O), die Klammer enthält M und Nₐ.",
+          "Notiere alle drei Größen mit ihrem Symbol, dem Wert und der Einheit. Vergiss nicht den Stoff in Klammern bei m und M."
+        ]
+      },
+      { titel: "Gesucht", frage: "Welche Größe willst du berechnen?",
+        loesung: "N(H₂O)",
+        hilfen: [
+          "„Wie viele Wassermoleküle\" — was zählt man da?",
+          "Eine Anzahl Teilchen wird mit dem Symbol N abgekürzt.",
+          "Du suchst eine Anzahl — denke an den großen Buchstaben N und vergiss den Stoff in Klammern nicht."
+        ]
+      },
+      { titel: "Lösungsweg", frage: "Welche Formeln brauchst du? (Zwei Schritte!)",
+        loesung: "1) n = m / M\n2) N = n · Nₐ",
+        hilfen: [
+          "Im Schaubild: Du musst von m über n zu N gehen — das sind zwei Pfeile.",
+          "Erster Pfeil: m → n (Größengleichung n = m / M). Zweiter Pfeil: n → N.",
+          "Für den zweiten Pfeil n → N: Welche Konstante verbindet die Stoffmenge mit der Teilchenzahl? Schau ins Schaubild und überlege dir die passende Multiplikation."
+        ]
+      },
+      { titel: "Ergebnis", frage: "Setze die Werte ein und berechne.",
+        loesung: "n = 36 g ÷ 18 g/mol = 2 mol\nN = 2 mol · 6,022·10²³ 1/mol\nN = 1,204·10²⁴ Moleküle",
+        hilfen: [
+          "Erst n berechnen: n = 36 g ÷ 18 g/mol — was kommt heraus?",
+          "n = 2 mol. Jetzt N = n · Nₐ = 2 mol · 6,022·10²³ 1/mol.",
+          "Multipliziere die 2 mit 6,022·10²³ — überlege, wie sich die Zehnerpotenz verändert, wenn der Faktor vor der Potenz größer als 1 wird."
+        ]
+      }
+    ],
+    hilfen: [
+      "Du brauchst zwei Schritte. Im Schaubild: Erst von m zu n, dann von n zu N.",
+      "Zwei Größengleichungen: n = m/M (Masse → Stoffmenge), dann N = n · Nₐ (Stoffmenge → Teilchenzahl).",
+      "Berechne erst n aus m und M, dann nimm dieses n und multipliziere es mit Nₐ. Achte darauf, wie sich die Zehnerpotenz beim Multiplizieren verhält."
+    ]
+  },
+  // Ab hier: einziges großes Canvas — die SuS strukturieren selbst
+  {
+    text: "In einer Probe befinden sich 3,011·10²³ Eisen-Atome. Welche Masse hat diese Probe? [M(Fe) = 56 g/mol; Nₐ = 6,022·10²³ 1/mol]",
+    modus: "frei",
+    musterloesung: "Gegeben:  N(Fe) = 3,011·10²³;  M(Fe) = 56 g/mol;  Nₐ = 6,022·10²³ 1/mol\nGesucht:  m(Fe)\nLösungsweg:\n  1) n = N / Nₐ\n  2) m = n · M\nErgebnis:\n  n = 3,011·10²³ ÷ 6,022·10²³ 1/mol = 0,5 mol\n  m = 0,5 mol · 56 g/mol = 28 g",
+    hilfen: [
+      "Diesmal gehst du den umgekehrten Weg: Von der Teilchenzahl N über die Stoffmenge n zur Masse m.",
+      "Erst n bestimmen: n = N / Nₐ. Dann mit n die Masse berechnen: m = n · M.",
+      "Teile zuerst N durch Nₐ — die Zehnerpotenzen kürzen sich. Multipliziere dann das n-Ergebnis mit der molaren Masse von Eisen."
+    ]
+  },
+  {
+    text: "Welches Volumen nehmen 0,25 mol Sauerstoff bei Raumtemperatur ein? [Vₘ = 24 L/mol]",
+    modus: "frei",
+    musterloesung: "Gegeben:  n(O₂) = 0,25 mol;  Vₘ = 24 L/mol\nGesucht:  V(O₂)\nLösungsweg:  V = n · Vₘ\nErgebnis:  V = 0,25 mol · 24 L/mol = 6 L",
+    hilfen: [
+      "Im Schaubild: Welche Umrechnungsgröße verbindet die Stoffmenge n mit dem Volumen V eines Gases?",
+      "Das molare Volumen Vₘ. Größengleichung: V = n · Vₘ.",
+      "Multipliziere die Stoffmenge mit dem molaren Volumen — das ist nur eine einzige Rechnung mit dem Taschenrechner."
+    ]
+  },
+  {
+    text: "Welches Volumen nehmen 88 g Kohlenstoffdioxid bei Raumtemperatur ein? [M(CO₂) = 44 g/mol; Vₘ = 24 L/mol]",
+    modus: "frei",
+    musterloesung: "Gegeben:  m(CO₂) = 88 g;  M(CO₂) = 44 g/mol;  Vₘ = 24 L/mol\nGesucht:  V(CO₂)\nLösungsweg:\n  1) n = m / M\n  2) V = n · Vₘ\nErgebnis:\n  n = 88 g ÷ 44 g/mol = 2 mol\n  V = 2 mol · 24 L/mol = 48 L",
+    hilfen: [
+      "Du musst zweimal umrechnen. Im Schaubild: m → n → V.",
+      "Erst n: n = m / M. Dann V: V = n · Vₘ.",
+      "Berechne erst die Stoffmenge aus Masse und molarer Masse, dann nimm dieses n und multipliziere es mit dem molaren Volumen."
+    ]
+  },
+  {
+    text: "Magnesium verbrennt zu Magnesiumoxid: 2 Mg + O₂ → 2 MgO. Welche Masse Magnesiumoxid entsteht aus 4,8 g Magnesium? [M(Mg) = 24 g/mol; M(MgO) = 40 g/mol]",
+    modus: "frei",
+    musterloesung: "Gegeben:  m(Mg) = 4,8 g;  M(Mg) = 24 g/mol;  M(MgO) = 40 g/mol\n            Reaktionsgleichung: 2 Mg + O₂ → 2 MgO\nGesucht:  m(MgO)\nLösungsweg:\n  1) n(Mg) = m(Mg) / M(Mg)\n  2) n(Mg) : n(MgO) = 2 : 2 = 1 : 1   ⇒  n(MgO) = n(Mg)\n  3) m(MgO) = n(MgO) · M(MgO)\nErgebnis:\n  n(Mg) = 4,8 g ÷ 24 g/mol = 0,2 mol\n  n(MgO) = 0,2 mol\n  m(MgO) = 0,2 mol · 40 g/mol = 8 g",
+    hilfen: [
+      "Bei stöchiometrischen Aufgaben hilft dieser Dreischritt: Erst die gegebene Masse in eine Stoffmenge umrechnen. Dann das Stoffmengenverhältnis aus der Reaktionsgleichung ablesen. Zuletzt mit der Stoffmenge des gesuchten Stoffs die Masse berechnen.",
+      "Aus 2 Mg + O₂ → 2 MgO liest man ab: n(Mg) : n(MgO) = 2 : 2 = 1 : 1. Also n(MgO) = n(Mg). Berechne zuerst n(Mg) = m(Mg)/M(Mg).",
+      "Berechne n(Mg) aus der gegebenen Masse. Da das Verhältnis 1:1 ist, gilt n(MgO) = n(Mg). Multipliziere dann mit der molaren Masse von MgO."
+    ]
+  },
+  {
+    text: "Welches Sauerstoffvolumen wird verbraucht, wenn 2,4 g Magnesium vollständig verbrennen? 2 Mg + O₂ → 2 MgO [M(Mg) = 24 g/mol; Vₘ = 24 L/mol]",
+    modus: "frei",
+    musterloesung: "Gegeben:  m(Mg) = 2,4 g;  M(Mg) = 24 g/mol;  Vₘ = 24 L/mol\n            Reaktionsgleichung: 2 Mg + O₂ → 2 MgO\nGesucht:  V(O₂)\nLösungsweg:\n  1) n(Mg) = m(Mg) / M(Mg)\n  2) n(Mg) : n(O₂) = 2 : 1   ⇒  n(O₂) = ½ · n(Mg)\n  3) V(O₂) = n(O₂) · Vₘ\nErgebnis:\n  n(Mg) = 2,4 g ÷ 24 g/mol = 0,1 mol\n  n(O₂) = 0,1 mol ÷ 2 = 0,05 mol\n  V(O₂) = 0,05 mol · 24 L/mol = 1,2 L",
+    hilfen: [
+      "Aus der Reaktionsgleichung: Auf 2 mol Mg kommt nur 1 mol O₂. Das Stoffmengenverhältnis ist also n(Mg) : n(O₂) = 2 : 1.",
+      "Drei Schritte: 1) n(Mg) berechnen aus m(Mg) und M(Mg). 2) n(O₂) = n(Mg)/2. 3) V(O₂) = n(O₂) · Vₘ.",
+      "Berechne n(Mg), halbiere es für n(O₂) (wegen 2:1), und multipliziere dann mit dem molaren Volumen — Achtung: das Ergebnis wird kleiner als 24 L sein."
+    ]
+  },
+  {
+    text: "Wasserstoff verbrennt: 2 H₂ + O₂ → 2 H₂O. Welche Masse Wasser entsteht, wenn 4 g Wasserstoff vollständig verbrennen? [M(H₂) = 2 g/mol; M(H₂O) = 18 g/mol]",
+    modus: "frei",
+    musterloesung: "Gegeben:  m(H₂) = 4 g;  M(H₂) = 2 g/mol;  M(H₂O) = 18 g/mol\n            Reaktionsgleichung: 2 H₂ + O₂ → 2 H₂O\nGesucht:  m(H₂O)\nLösungsweg:\n  1) n(H₂) = m(H₂) / M(H₂)\n  2) n(H₂) : n(H₂O) = 2 : 2 = 1 : 1\n  3) m(H₂O) = n(H₂O) · M(H₂O)\nErgebnis:\n  n(H₂) = 4 g ÷ 2 g/mol = 2 mol\n  n(H₂O) = 2 mol\n  m(H₂O) = 2 mol · 18 g/mol = 36 g",
+    hilfen: [
+      "Schau in die Reaktionsgleichung: 2 H₂ + O₂ → 2 H₂O. Welches Stoffmengenverhältnis steht da zwischen H₂ und H₂O?",
+      "n(H₂) : n(H₂O) = 2 : 2 = 1 : 1. Schritte: n(H₂) berechnen, daraus n(H₂O), dann m(H₂O) = n · M.",
+      "Berechne n(H₂) aus m und M. Wegen 1:1 ist n(H₂O) = n(H₂). Multipliziere dieses n mit der molaren Masse von Wasser."
+    ]
+  },
+  {
+    text: "Methan verbrennt: CH₄ + 2 O₂ → CO₂ + 2 H₂O. Welches Volumen Kohlenstoffdioxid entsteht, wenn 8 g Methan vollständig verbrennen? [M(CH₄) = 16 g/mol; Vₘ = 24 L/mol]",
+    modus: "frei",
+    musterloesung: "Gegeben:  m(CH₄) = 8 g;  M(CH₄) = 16 g/mol;  Vₘ = 24 L/mol\n            Reaktionsgleichung: CH₄ + 2 O₂ → CO₂ + 2 H₂O\nGesucht:  V(CO₂)\nLösungsweg:\n  1) n(CH₄) = m(CH₄) / M(CH₄)\n  2) n(CH₄) : n(CO₂) = 1 : 1\n  3) V(CO₂) = n(CO₂) · Vₘ\nErgebnis:\n  n(CH₄) = 8 g ÷ 16 g/mol = 0,5 mol\n  n(CO₂) = 0,5 mol\n  V(CO₂) = 0,5 mol · 24 L/mol = 12 L",
+    hilfen: [
+      "Verhältnis aus der Gleichung ablesen: CH₄ : CO₂ = 1 : 1.",
+      "Schritte: n(CH₄) = m(CH₄)/M(CH₄). Dann n(CO₂) = n(CH₄). Zuletzt V(CO₂) = n · Vₘ.",
+      "Berechne n(CH₄), übernimm den Wert für n(CO₂) (1:1) und multipliziere mit dem molaren Volumen."
+    ]
+  },
+  {
+    text: "Methan verbrennt: CH₄ + 2 O₂ → CO₂ + 2 H₂O. Welche Masse Wasser entsteht, wenn 16 g Methan vollständig verbrennen? [M(CH₄) = 16 g/mol; M(H₂O) = 18 g/mol]",
+    modus: "frei",
+    musterloesung: "Gegeben:  m(CH₄) = 16 g;  M(CH₄) = 16 g/mol;  M(H₂O) = 18 g/mol\n            Reaktionsgleichung: CH₄ + 2 O₂ → CO₂ + 2 H₂O\nGesucht:  m(H₂O)\nLösungsweg:\n  1) n(CH₄) = m(CH₄) / M(CH₄)\n  2) n(CH₄) : n(H₂O) = 1 : 2   ⇒  n(H₂O) = 2 · n(CH₄)\n  3) m(H₂O) = n(H₂O) · M(H₂O)\nErgebnis:\n  n(CH₄) = 16 g ÷ 16 g/mol = 1 mol\n  n(H₂O) = 2 · 1 mol = 2 mol\n  m(H₂O) = 2 mol · 18 g/mol = 36 g",
+    hilfen: [
+      "Achtung: Auf 1 mol CH₄ kommen jetzt 2 mol H₂O! Das Verhältnis ist n(CH₄) : n(H₂O) = 1 : 2.",
+      "n(CH₄) berechnen, dann verdoppeln für n(H₂O), dann m(H₂O) = n · M.",
+      "Berechne n(CH₄), verdopple den Wert für n(H₂O) (wegen 1:2), und multipliziere dann mit der molaren Masse von Wasser."
+    ]
+  },
+  {
+    text: "Eisen reagiert mit Schwefel: Fe + S → FeS. Welche Masse Schwefel benötigt man, um 11,2 g Eisen vollständig zu Eisensulfid umzusetzen? [M(Fe) = 56 g/mol; M(S) = 32 g/mol]",
+    modus: "frei",
+    musterloesung: "Gegeben:  m(Fe) = 11,2 g;  M(Fe) = 56 g/mol;  M(S) = 32 g/mol\n            Reaktionsgleichung: Fe + S → FeS\nGesucht:  m(S)\nLösungsweg:\n  1) n(Fe) = m(Fe) / M(Fe)\n  2) n(Fe) : n(S) = 1 : 1\n  3) m(S) = n(S) · M(S)\nErgebnis:\n  n(Fe) = 11,2 g ÷ 56 g/mol = 0,2 mol\n  n(S) = 0,2 mol\n  m(S) = 0,2 mol · 32 g/mol = 6,4 g",
+    hilfen: [
+      "Reaktionsgleichung beachten: Fe + S → FeS. Verhältnis n(Fe) : n(S) = 1 : 1.",
+      "Erst n(Fe), das gilt auch für n(S). Dann m(S) = n(S) · M(S).",
+      "Berechne n(Fe), übernimm es für n(S) (1:1) und multipliziere dann mit der molaren Masse von Schwefel."
+    ]
+  },
+  {
+    text: "Bei der Knallgasreaktion 2 H₂ + O₂ → 2 H₂O werden 12 L Wasserstoff verbrannt. Welches Volumen Wasserdampf entsteht (gleiche Bedingungen)? [Vₘ = 24 L/mol]",
+    modus: "frei",
+    musterloesung: "Gegeben:  V(H₂) = 12 L;  Vₘ = 24 L/mol\n            Reaktionsgleichung: 2 H₂ + O₂ → 2 H₂O\nGesucht:  V(H₂O)\nLösungsweg:\n  1) n(H₂) = V(H₂) / Vₘ\n  2) n(H₂) : n(H₂O) = 2 : 2 = 1 : 1\n  3) V(H₂O) = n(H₂O) · Vₘ\n            Bei gleichen Bedingungen: V(H₂O) = V(H₂)\nErgebnis:\n  n(H₂) = 12 L ÷ 24 L/mol = 0,5 mol\n  n(H₂O) = 0,5 mol\n  V(H₂O) = 0,5 mol · 24 L/mol = 12 L",
+    hilfen: [
+      "Tipp: Bei gleichen Bedingungen verhalten sich die Volumina von Gasen wie ihre Stoffmengen (Avogadro). Welches Verhältnis hat 2 H₂ : 2 H₂O?",
+      "n(H₂) : n(H₂O) = 2 : 2 = 1 : 1. Also gilt auch V(H₂) : V(H₂O) = 1 : 1.",
+      "Da das Volumenverhältnis 1:1 ist und beide Gase unter gleichen Bedingungen vorliegen, brauchst du gar nicht den Umweg über n zu gehen — überlege, was das für V(H₂O) bedeutet."
+    ]
+  }
+];
+
+// MINDESTSTRICHE: Wir messen Strich-Segmente (jedes pointermove zählt als 1).
+// 10 Strichsegmente = ungefähr 1 kurzes Zeichen / Linie.
+const MIN_STRICHE = 5;
+
+// State
+let schuelerName = "";
+let aktuelleAufgabe = 0;
+let punkte = 0;
+let streak = 0;
+let besteStreak = 0;
+let hilfenStufe = 0;
+let zustand = []; // pro Aufgabe: array von schritt-zuständen ODER {ein einziger Zustand für freien Modus}
+let activeCanvases = {}; // sIdx -> { canvas, ctx, ... }
+let werkzeug = "stift";
+let startZeit = null;
+
+// ===========================================================
+// PERSISTENZ über zentrale Storage-API
+// ===========================================================
+// Speichert den kompletten Trainer-Zustand pro Schüler:in. Die Daten
+// überleben SCORM-Updates auf mebis (suspend_data wird pro
+// Manifest-Identifier serverseitig gehalten).
+const TRAINER_KEY = 'ueb.stoechiometrietrainer.v1';
+let trainerSaveDebounce = null;
+function trainerSpeichern() {
+  // debounced — wird nach jeder Aktion aufgerufen, schreibt aber nur alle 400ms
+  clearTimeout(trainerSaveDebounce);
+  trainerSaveDebounce = setTimeout(() => {
+    try {
+      window.Storage.set(TRAINER_KEY, {
+        schuelerName, aktuelleAufgabe, punkte, streak, besteStreak,
+        startZeit, zustand,
+        gestartet: true
+      });
+    } catch(e) { console.warn('Trainer-Speichern fehlgeschlagen', e); }
+  }, 400);
+}
+function trainerLaden() {
+  try {
+    const data = window.Storage.get(TRAINER_KEY);
+    if (!data || !data.gestartet) return null;
+    return data;
+  } catch(e) { console.warn('Trainer-Laden fehlgeschlagen', e); return null; }
+}
+
+// ===========================================================
+// START
+// ===========================================================
+function pruefeStartBereit() {
+  const name = document.getElementById("schueler-name").value.trim();
+  document.getElementById("start-btn").disabled = (name.length < 2);
+}
+
+function starten() {
+  schuelerName = document.getElementById("schueler-name").value.trim();
+  startZeit = new Date().toISOString();
+  document.getElementById("startbildschirm").classList.add("versteckt");
+  document.getElementById("trainer").classList.remove("versteckt");
+  document.getElementById("gesamt-nr").textContent = AUFGABEN.length;
+
+  zustand = AUFGABEN.map(auf => {
+    if (auf.modus === "schritte") {
+      return auf.schritte.map(() => leererZustand());
+    } else {
+      return [leererZustand()]; // ein einziger Zustand für den freien Modus
+    }
+  });
+
+  trainerSpeichern();
+  ladeAufgabe(0);
+}
+
+// Vorhandene Session direkt wiederherstellen — wird unten beim DOM-Init
+// aufgerufen, falls Storage gespeicherte Daten hat.
+function trainerWiederherstellen(daten) {
+  schuelerName = daten.schuelerName || '';
+  aktuelleAufgabe = Math.max(0, Math.min(daten.aktuelleAufgabe || 0, AUFGABEN.length - 1));
+  punkte = daten.punkte || 0;
+  streak = daten.streak || 0;
+  besteStreak = daten.besteStreak || 0;
+  startZeit = daten.startZeit || new Date().toISOString();
+
+  // Zustand laden — aber Struktur an aktuelle AUFGABEN angleichen, falls
+  // sich die Aufgabenanzahl/Schrittanzahl durch eine neue Inhaltsversion
+  // verändert hat. Vorhandene Schritte werden übernommen, fehlende neu angelegt.
+  if (Array.isArray(daten.zustand) && daten.zustand.length > 0) {
+    zustand = AUFGABEN.map((auf, i) => {
+      const alt = daten.zustand[i];
+      const erwarteteAnzahl = auf.modus === 'schritte' ? auf.schritte.length : 1;
+      if (Array.isArray(alt) && alt.length === erwarteteAnzahl) {
+        // perfekte Übereinstimmung — übernehmen
+        return alt.map(z => Object.assign(leererZustand(), z));
+      }
+      // Inkompatibel: leeres Gerüst, aber Daten retten wo möglich
+      return Array.from({ length: erwarteteAnzahl }, (_, sIdx) => {
+        if (Array.isArray(alt) && alt[sIdx]) {
+          return Object.assign(leererZustand(), alt[sIdx]);
+        }
+        return leererZustand();
+      });
+    });
+  } else {
+    zustand = AUFGABEN.map(auf =>
+      auf.modus === 'schritte'
+        ? auf.schritte.map(() => leererZustand())
+        : [leererZustand()]
+    );
+  }
+
+  // UI öffnen
+  document.getElementById("startbildschirm").classList.add("versteckt");
+  document.getElementById("trainer").classList.remove("versteckt");
+  document.getElementById("gesamt-nr").textContent = AUFGABEN.length;
+  // Punkte/Streak im Header
+  if (typeof aktualisiereStats === 'function') {
+    try { aktualisiereStats(); } catch(_) {}
+  }
+  ladeAufgabe(aktuelleAufgabe);
+}
+
+// ===========================================================
+// ZUSTAND
+// ===========================================================
+function leererZustand() {
+  return {
+    canvasDaten: null,
+    striche: 0,
+    loesungAngezeigt: false,
+    selbstBewertung: null,
+    versuche: 0,
+    punkte: 0,
+    zeitstempel: null,
+    canvasHoehe: null,
+    hilfenStufe: 0  // pro Schritt eigene Hilfen-Anzeige
+  };
+}
+
+// ===========================================================
+// AUFGABE LADEN
+// ===========================================================
+function ladeAufgabe(i) {
+  aktuelleAufgabe = i;
+  hilfenStufe = 0;
+  document.getElementById("aktuelle-nr").textContent = i + 1;
+  document.getElementById("header-nr").textContent = i + 1;
+  document.getElementById("aufgabe-text").textContent = AUFGABEN[i].text;
+
+  const cont = document.getElementById("schritte-container");
+  cont.innerHTML = "";
+  activeCanvases = {};
+
+  if (AUFGABEN[i].modus === "schritte") {
+    AUFGABEN[i].schritte.forEach((schritt, sIdx) => buildSchrittCard(i, sIdx, schritt));
+    // Im Schritt-Modus: globale Hilfe-Box ausblenden, da Hilfen pro Schritt sind
+    document.querySelector(".hilfe-bereich").style.display = "none";
+  } else {
+    buildFreieAufgabe(i, AUFGABEN[i]);
+    document.querySelector(".hilfe-bereich").style.display = "block";
+  }
+
+  zeigeAlleAktivierteHilfen();
+  aktualisiereHilfeButton();
+
+  document.getElementById("zurueck-btn").disabled = (i === 0);
+  const alleGeloest = zustand[i].every(z => z.selbstBewertung === 'richtig');
+  document.getElementById("weiter-btn").disabled = !alleGeloest;
+  document.getElementById("weiter-btn").textContent = (i === AUFGABEN.length - 1) ? "Übung beenden" : "Nächste Aufgabe →";
+
+  setTimeout(() => {
+    if (AUFGABEN[i].modus === "schritte") {
+      AUFGABEN[i].schritte.forEach((s, sIdx) => initCanvas(sIdx));
+    } else {
+      initCanvas(0);
+    }
+    bindCanvasTools();
+  }, 30);
+  trainerSpeichern();
+}
+
+function buildSchrittCard(aIdx, sIdx, schritt) {
+  const z = zustand[aIdx][sIdx];
+  const cont = document.getElementById("schritte-container");
+  const div = document.createElement("div");
+  div.className = "schritt";
+  div.id = `schritt-${sIdx}`;
+
+  const istOffen = sIdx === 0 || (zustand[aIdx][sIdx-1] && zustand[aIdx][sIdx-1].selbstBewertung === 'richtig');
+  const istGeloest = z.selbstBewertung === 'richtig';
+  if (!istOffen) div.classList.add("locked");
+  if (istGeloest) div.classList.add("geloest");
+  if (istOffen && !istGeloest) div.classList.add("aktiv");
+
+  const hatHilfen = schritt.hilfen && schritt.hilfen.length > 0;
+  const hilfeBlock = hatHilfen ? `
+    <div class="schritt-hilfe-bereich" style="text-align:right;margin-top:10px;">
+      <button class="hilfe-btn schritt-hilfe-btn" id="schritt-hilfe-btn-${sIdx}" onclick="schrittHilfeAnzeigen(${sIdx})">💡 Tipp anzeigen</button>
+      <div class="hilfe-anzeige" id="schritt-hilfe-anzeige-${sIdx}" style="text-align:left;margin-top:10px;"></div>
+    </div>
+  ` : "";
+
+  div.innerHTML = `
+    <div class="schritt-titel"><span class="schritt-nr">${sIdx+1}</span> ${schritt.titel}</div>
+    <div class="schritt-frage">${schritt.frage}</div>
+    <div class="canvas-tools">
+      <button class="tool-btn aktiv" data-werkzeug="stift" data-schritt="${sIdx}">Stift</button>
+      <button class="tool-btn" data-werkzeug="radierer" data-schritt="${sIdx}">Radierer</button>
+      <button class="tool-btn" data-aktion="leeren" data-schritt="${sIdx}">Löschen</button>
+      <button class="tool-btn groesse" data-aktion="vergroessern" data-schritt="${sIdx}">+ Größer</button>
+      <button class="tool-btn groesse" data-aktion="verkleinern" data-schritt="${sIdx}">− Kleiner</button>
+      <span class="farbpalette" data-schritt="${sIdx}">
+        <button class="farb-btn aktiv" data-farbe="#2D2A26" data-schritt="${sIdx}" style="background:#2D2A26" aria-label="Schwarz"></button>
+        <button class="farb-btn" data-farbe="#1A4D8F" data-schritt="${sIdx}" style="background:#1A4D8F" aria-label="Blau"></button>
+        <button class="farb-btn" data-farbe="#C62828" data-schritt="${sIdx}" style="background:#C62828" aria-label="Rot"></button>
+        <button class="farb-btn" data-farbe="#2E7D32" data-schritt="${sIdx}" style="background:#2E7D32" aria-label="Grün"></button>
+        <button class="farb-btn" data-farbe="#EF6C00" data-schritt="${sIdx}" style="background:#EF6C00" aria-label="Orange"></button>
+        <button class="farb-btn" data-farbe="#6A1B9A" data-schritt="${sIdx}" style="background:#6A1B9A" aria-label="Lila"></button>
+      </span>
+    </div>
+    <div class="canvas-wrapper" id="canvas-wrapper-${sIdx}">
+      <canvas class="zeichnen" id="canvas-${sIdx}"></canvas>
+    </div>
+    <div class="schritt-actions">
+      <button class="vergleich-btn" id="vergleich-${sIdx}" disabled onclick="loesungVergleichen(${sIdx})">Lösung vergleichen</button>
+      <span class="canvas-hinweis" id="hinweis-${sIdx}">Schreibe deine Lösung mit dem Pencil</span>
+    </div>
+    ${hilfeBlock}
+    <div class="musterloesung" id="muster-${sIdx}" style="display:none;">
+      <div class="musterloesung-titel">Musterlösung</div>
+      <div class="musterloesung-text">${escapeHtml(schritt.loesung)}</div>
+      <div class="selbsteinschaetzung">
+        <button class="selbst-btn richtig" onclick="selbstBewerten(${sIdx}, 'richtig')">✓ Hatte ich richtig</button>
+        <button class="selbst-btn falsch" onclick="selbstBewerten(${sIdx}, 'falsch')">✗ Nochmal versuchen</button>
+      </div>
+    </div>
+  `;
+  cont.appendChild(div);
+
+  if (istGeloest) {
+    const muster = div.querySelector(`#muster-${sIdx}`);
+    muster.style.display = "block";
+    const selbst = muster.querySelector(".selbsteinschaetzung");
+    if (selbst) selbst.style.display = "none";
+    // "Nachträglich anpassen"-Button anzeigen — S kann jederzeit zurück
+    // und die Lösung verbessern, ohne dass die Bewertung verloren geht.
+    if (!muster.querySelector('.nachbearbeiten-btn')) {
+      const btn = document.createElement('button');
+      btn.className = 'selbst-btn nachbearbeiten-btn';
+      btn.textContent = '✏ Lösung nachträglich anpassen';
+      btn.style.background = '#fff';
+      btn.style.color = '#5C8A4F';
+      btn.style.border = '1px solid #5C8A4F';
+      btn.style.marginTop = '10px';
+      btn.onclick = () => loesungNachtraeglichBearbeiten(sIdx);
+      muster.appendChild(btn);
+    }
+  }
+
+  // Schritt-Hilfen wiederherstellen, wenn welche schon angezeigt waren
+  if (hatHilfen && z.hilfenStufe > 0) {
+    zeigeSchrittHilfen(sIdx);
+    aktualisiereSchrittHilfeButton(sIdx);
+  }
+}
+
+function buildFreieAufgabe(aIdx, auf) {
+  const z = zustand[aIdx][0];
+  const cont = document.getElementById("schritte-container");
+  const div = document.createElement("div");
+  div.className = "schritt aktiv";
+  div.id = `schritt-0`;
+  if (z.selbstBewertung === 'richtig') {
+    div.classList.add("geloest");
+    div.classList.remove("aktiv");
+  }
+
+  div.innerHTML = `
+    <div class="schritt-titel"><span class="schritt-nr">✎</span> Deine Lösung</div>
+    <div class="schritt-frage">Strukturiere deine Lösung selbst: Gegeben → Gesucht → Lösungsweg → Ergebnis. Du kannst das Schreibfeld vergrößern, falls du mehr Platz brauchst.</div>
+    <div class="canvas-tools">
+      <button class="tool-btn aktiv" data-werkzeug="stift" data-schritt="0">Stift</button>
+      <button class="tool-btn" data-werkzeug="radierer" data-schritt="0">Radierer</button>
+      <button class="tool-btn" data-aktion="leeren" data-schritt="0">Löschen</button>
+      <button class="tool-btn groesse" data-aktion="vergroessern" data-schritt="0">+ Größer</button>
+      <button class="tool-btn groesse" data-aktion="verkleinern" data-schritt="0">− Kleiner</button>
+      <span class="farbpalette" data-schritt="0">
+        <button class="farb-btn aktiv" data-farbe="#2D2A26" data-schritt="0" style="background:#2D2A26" aria-label="Schwarz"></button>
+        <button class="farb-btn" data-farbe="#1A4D8F" data-schritt="0" style="background:#1A4D8F" aria-label="Blau"></button>
+        <button class="farb-btn" data-farbe="#C62828" data-schritt="0" style="background:#C62828" aria-label="Rot"></button>
+        <button class="farb-btn" data-farbe="#2E7D32" data-schritt="0" style="background:#2E7D32" aria-label="Grün"></button>
+        <button class="farb-btn" data-farbe="#EF6C00" data-schritt="0" style="background:#EF6C00" aria-label="Orange"></button>
+        <button class="farb-btn" data-farbe="#6A1B9A" data-schritt="0" style="background:#6A1B9A" aria-label="Lila"></button>
+      </span>
+    </div>
+    <div class="canvas-wrapper" id="canvas-wrapper-0">
+      <canvas class="zeichnen" id="canvas-0"></canvas>
+    </div>
+    <div class="schritt-actions">
+      <button class="vergleich-btn" id="vergleich-0" disabled onclick="loesungVergleichen(0)">Lösung vergleichen</button>
+      <span class="canvas-hinweis" id="hinweis-0">Schreibe deine Lösung mit dem Pencil</span>
+    </div>
+    <div class="musterloesung" id="muster-0" style="display:none;">
+      <div class="musterloesung-titel">Musterlösung</div>
+      <div class="musterloesung-text">${escapeHtml(auf.musterloesung)}</div>
+      <div class="selbsteinschaetzung">
+        <button class="selbst-btn richtig" onclick="selbstBewerten(0, 'richtig')">✓ Hatte ich richtig</button>
+        <button class="selbst-btn falsch" onclick="selbstBewerten(0, 'falsch')">✗ Nochmal versuchen</button>
+      </div>
+    </div>
+  `;
+  cont.appendChild(div);
+
+  if (z.selbstBewertung === 'richtig') {
+    const muster = div.querySelector(`#muster-0`);
+    muster.style.display = "block";
+    const selbst = muster.querySelector(".selbsteinschaetzung");
+    if (selbst) selbst.style.display = "none";
+    // "Nachträglich anpassen"-Button auch im freien Modus
+    if (!muster.querySelector('.nachbearbeiten-btn')) {
+      const btn = document.createElement('button');
+      btn.className = 'selbst-btn nachbearbeiten-btn';
+      btn.textContent = '✏ Lösung nachträglich anpassen';
+      btn.style.background = '#fff';
+      btn.style.color = '#5C8A4F';
+      btn.style.border = '1px solid #5C8A4F';
+      btn.style.marginTop = '10px';
+      btn.onclick = () => loesungNachtraeglichBearbeiten(0);
+      muster.appendChild(btn);
+    }
+  }
+}
+
+// ===========================================================
+// CANVAS  (Smooth-Pencil v2)
+// ===========================================================
+// Designziele:
+//  - Flüssiges Schreibgefühl: Bezier-Glättung zwischen Punkten
+//  - Stabile Pointer-States: kein "stuck drawing", keine blockierten Buttons
+//  - Apple-Pencil-Erkennung: Finger/Handballen werden ignoriert
+//  - Synthetische Klicks nach Pen-Up werden zeitbasiert geblockt
+//    (kein body-class, der hängenbleiben könnte)
+//
+// Globale Variablen für Synthetik-Click-Schutz:
+let lastPenActivityTs = 0;     // Zeitstempel der letzten Pen-Bewegung/-Up
+let aktivePenZeichner = 0;     // Wieviele Canvases gerade aktiv mit Pen beschrieben werden
+
+function initCanvas(sIdx) {
+  const canvas = document.getElementById(`canvas-${sIdx}`);
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d", { willReadFrequently: false, desynchronized: true });
+  const z = zustand[aktuelleAufgabe][sIdx];
+
+  // Standardhöhe je nach Modus / Schritt
+  let hoehe = z.canvasHoehe;
+  if (!hoehe) {
+    if (AUFGABEN[aktuelleAufgabe].modus === "frei") {
+      hoehe = 380; // freier Modus großzügig
+    } else {
+      const titel = AUFGABEN[aktuelleAufgabe].schritte[sIdx].titel;
+      if (titel === "Gesucht") hoehe = 110;
+      else if (titel === "Ergebnis" || titel === "Lösungsweg") hoehe = 220;
+      else hoehe = 200;
+    }
+    z.canvasHoehe = hoehe;
+  }
+
+  resizeCanvas(canvas, ctx, hoehe);
+
+  activeCanvases[sIdx] = {
+    canvas, ctx,
+    zeichnet: false,
+    activePointerId: null,
+    points: [],            // Buffer für Bezier-Glättung (gerenderte Punkte)
+    pendingPoints: [],     // Puffer für rAF-basiertes Rendering (noch nicht gezeichnet)
+    rafId: null,           // Aktuell geplanter requestAnimationFrame
+    lastWidth: 1.8,        // letzte Strichstärke (für Glättung der Strichstärke)
+    striche: z.striche || 0,
+    aktuellerStrichBewegt: false,
+    strichStart: null,
+    hoehe
+  };
+
+  // Pen-Schutzrand zwischen Canvas und Toolbar einfügen — fängt knappe
+  // Fehlberührungen mit dem Pencil ab, damit kein Toolbar-Button getroffen wird.
+  const wrapper = canvas.parentElement;
+  const tools = wrapper.parentElement.querySelector('.canvas-tools');
+  if (wrapper && !wrapper.querySelector('.pen-puffer')) {
+    const puffer = document.createElement('div');
+    puffer.className = 'pen-puffer';
+    wrapper.appendChild(puffer);
+  }
+
+  // vorherige Zeichnung wiederherstellen
+  if (z.canvasDaten) {
+    const img = new Image();
+    img.onload = () => {
+      const breite = canvas.parentElement.clientWidth;
+      ctx.drawImage(img, 0, 0, breite, hoehe);
+    };
+    img.src = z.canvasDaten;
+  }
+
+  if (z.selbstBewertung === 'richtig' || (z.loesungAngezeigt && z.selbstBewertung === null)) {
+    canvas.classList.add("gesperrt");
+    canvas.parentElement.classList.add("gesperrt");
+  }
+
+  canvas.addEventListener("pointerdown", (e) => startZeichnen(e, sIdx));
+  canvas.addEventListener("pointermove", (e) => zeichneAuf(e, sIdx));
+  canvas.addEventListener("pointerup",   (e) => stopZeichnen(e, sIdx));
+  canvas.addEventListener("pointercancel",(e) => stopZeichnen(e, sIdx));
+
+  // ===========================================================
+  // TOUCH-EVENTS als Fallback / Parallel-Pfad
+  // ===========================================================
+  // Auf iOS Safari werden bei sehr schnellem Schreiben einzelne
+  // pointerdown-Events vom Browser unterdrückt (Scribble-/Geste-
+  // Detection). Touch-Events kommen aber zuverlässig durch.
+  function touchToPointerLike(t) {
+    return {
+      pointerId: 1000 + (t.identifier || 0),
+      pointerType: 'pen',
+      clientX: t.clientX,
+      clientY: t.clientY,
+      pressure: t.force || 0.5,
+      tiltX: 0, tiltY: 0,
+      preventDefault: () => {},
+      getCoalescedEvents: () => []
+    };
+  }
+  function istStylusTouch(t) {
+    return t && t.touchType === 'stylus';
+  }
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (!istStylusTouch(t)) continue;
+      const cv = activeCanvases[sIdx];
+      if (cv && cv.zeichnet) continue; // Pointer hat schon übernommen
+      startZeichnen(touchToPointerLike(t), sIdx);
+    }
+  }, { passive: false });
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (!istStylusTouch(t)) continue;
+      const cv = activeCanvases[sIdx];
+      if (!cv || !cv.zeichnet) continue;
+      const fakeId = 1000 + (t.identifier || 0);
+      if (cv.activePointerId !== fakeId) continue;
+      zeichneAuf(touchToPointerLike(t), sIdx);
+    }
+  }, { passive: false });
+  function trainerTouchEnd(e) {
+    for (const t of e.changedTouches) {
+      if (!istStylusTouch(t)) continue;
+      const cv = activeCanvases[sIdx];
+      const fakeId = 1000 + (t.identifier || 0);
+      if (!cv || cv.activePointerId !== fakeId) continue;
+      stopZeichnen({ pointerId: fakeId }, sIdx);
+    }
+  }
+  canvas.addEventListener('touchend', trainerTouchEnd, { passive: true });
+  canvas.addEventListener('touchcancel', trainerTouchEnd, { passive: true });
+  // pointerleave bewusst NICHT: Pointer-Capture hält den Pen, auch wenn er kurz
+  // den Canvas-Bereich verlässt (z.B. an den Rand schreibt).
+
+  aktualisiereVergleichButton(sIdx);
+}
+
+function resizeCanvas(canvas, ctx, hoehe) {
+  const dpr = window.devicePixelRatio || 1;
+  const breite = canvas.parentElement.clientWidth;
+  // setTransform reset, damit DPR-Skalierung sich nicht aufmultipliziert
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  canvas.style.height = hoehe + "px";
+  canvas.width = Math.round(breite * dpr);
+  canvas.height = Math.round(hoehe * dpr);
+  ctx.scale(dpr, dpr);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+}
+
+// Plattform-Detection: auf iOS strenger filtern (Apple Pencil only),
+// auf allen anderen Plattformen jede Eingabe akzeptieren (Maus, S-Pen, Touch).
+const IST_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+// Globale Stiftfarbe — kann über die Farbpalette geändert werden.
+let stiftFarbe = '#2D2A26';
+
+// Pencil/Eingabegerät-Erkennung — Cross-Browser:
+//   - iOS: nur Apple Pencil — Finger bleibt fürs Scrollen frei
+//   - Android/Windows/sonstiges: ALLE Eingaben (Pen, Maus, S-Pen, Touch)
+function isPen(e) {
+  if (e.pointerType === 'pen') return true;
+  if (!IST_IOS) {
+    if (e.pointerType === 'mouse' || e.pointerType === 'touch') return true;
+  }
+  if (e.pointerType === 'touch') {
+    if ((e.tiltX && e.tiltX !== 0) || (e.tiltY && e.tiltY !== 0)) return true;
+    if (typeof e.altitudeAngle === 'number' && e.altitudeAngle > 0 && e.altitudeAngle < Math.PI/2 - 0.01) return true;
+    if (lastPenActivityTs && (performance.now() - lastPenActivityTs) < 2000) return true;
+  }
+  return false;
+}
+
+// Strichstärke aus Pencil-Druck ableiten (geglättet, nicht zu zappelig)
+function druckZuBreite(pressure, prev) {
+  // pressure ist 0..1; default 0.5 wenn nichts geliefert wird
+  const p = (pressure && pressure > 0) ? pressure : 0.5;
+  const ziel = 1.2 + p * 2.6; // 1.2px bis 3.8px
+  // Stärkere Glättung (0.85/0.15 statt 0.7/0.3): Apple-Pencil-Druck ist
+  // stufig, diese Filterung lässt Strichbreiten butterweich werden.
+  return prev * 0.85 + ziel * 0.15;
+}
+
+// Mindestabstand zwischen zwei Punkten in CSS-Pixeln. Bei 120 Hz
+// ProMotion liegen Pencil-Punkte oft <0.5px auseinander → das erzeugt
+// nur Jitter und CPU-Last ohne sichtbaren Vorteil.
+const TRAINER_MIN_PUNKT_ABSTAND_QUAD = 0.6 * 0.6;
+
+function startZeichnen(e, sIdx) {
+  if (!isPen(e)) return; // Handballen / Finger ignorieren
+  // Sperre wird einzig über die "gesperrt"-Klasse auf dem Wrapper gesteuert.
+  // So kann der nachträgliche Bearbeiten-Button die Sperre lösen, ohne
+  // selbstBewertung zurücksetzen zu müssen.
+  const wrap = document.getElementById(`canvas-wrapper-${sIdx}`);
+  if (wrap && wrap.classList.contains('gesperrt')) return;
+
+  const cv = activeCanvases[sIdx];
+  if (!cv) return;
+
+  // Falls aus irgendeinem Grund noch ein alter Strich aktiv ist (z.B. pointercancel
+  // wurde verpasst), erst mal sauber zurücksetzen.
+  if (cv.zeichnet) {
+    cv.zeichnet = false;
+    cv.activePointerId = null;
+    cv.points = [];
+    cv.pendingPoints = [];
+    if (cv.rafId !== null) { cancelAnimationFrame(cv.rafId); cv.rafId = null; }
+    // WICHTIG: Counter NICHT erneut erhöhen — er wurde beim alten Start schon ++.
+    // Stattdessen nicht erhöhen, weil wir den Zustand "übernehmen" als wäre
+    // der vorige Strich gerade beendet und dieser hier sein Nachfolger.
+    aktivePenZeichner = Math.max(0, aktivePenZeichner - 1);
+  }
+
+  cv.zeichnet = true;
+  cv.activePointerId = e.pointerId;
+  cv.pendingPoints = [];
+  // Bewusst KEIN setPointerCapture: Auf Canvas mit touch-action:none brauchen
+  // wir es nicht, und es führte zu hängenden Captures (nächster Strich wurde
+  // nicht erkannt, bis ein Werkzeug-Wechsel den Zustand zurücksetzt).
+
+  aktivePenZeichner++;
+  lastPenActivityTs = performance.now();
+  // Body-Klasse: blockiert während aktiver Pen-Eingabe alle Selections
+  document.body.classList.add('pen-aktiv');
+
+  cv.aktuellerStrichBewegt = false;
+  const pos = getPos(e, cv.canvas);
+  cv.strichStart = pos;
+  cv.points = [pos];
+  cv.lastWidth = druckZuBreite(e.pressure, 1.8);
+
+  // Direkt einen winzigen Punkt setzen, damit auch ein einzelnes Tippen sichtbar ist
+  if (werkzeug === "stift") {
+    cv.ctx.globalCompositeOperation = "source-over";
+    cv.ctx.fillStyle = stiftFarbe;
+    cv.ctx.beginPath();
+    cv.ctx.arc(pos.x, pos.y, cv.lastWidth / 2, 0, Math.PI * 2);
+    cv.ctx.fill();
+  }
+
+  e.preventDefault();
+}
+
+// rAF-basiertes Rendern für den Stift: Pointermove-Events sammeln nur
+// Punkte, gezeichnet wird einmal pro Display-Refresh. Verhindert Ruckler
+// bei 120 Hz ProMotion und gibt der GPU saubere Frame-Grenzen.
+// Catmull-Rom-Spline (centripetal, α≈0.5) als kubische Bezier — siehe AB.
+// Die Kurve läuft EXAKT durch jeden Stützpunkt → glatteres Schreibgefühl
+// als die quadratische Bezier-Mittelpunkts-Methode.
+function trainerCatmullRomBezier(p0, p1, p2, p3) {
+  return {
+    cp1x: p1.x + (p2.x - p0.x) / 6,
+    cp1y: p1.y + (p2.y - p0.y) / 6,
+    cp2x: p2.x - (p3.x - p1.x) / 6,
+    cp2y: p2.y - (p3.y - p1.y) / 6
+  };
+}
+
+function flushStiftFrame(sIdx) {
+  const cv = activeCanvases[sIdx];
+  if (!cv) return;
+  cv.rafId = null;
+  if (!cv.zeichnet || cv.pendingPoints.length === 0) return;
+
+  cv.ctx.globalCompositeOperation = "source-over";
+  cv.ctx.strokeStyle = stiftFarbe;
+
+  while (cv.pendingPoints.length > 0) {
+    const punkt = cv.pendingPoints.shift();
+    cv.points.push(punkt);
+    cv.lastWidth = druckZuBreite(punkt.pressure, cv.lastWidth);
+    cv.ctx.lineWidth = cv.lastWidth;
+
+    const n = cv.points.length;
+    if (n >= 4) {
+      // Catmull-Rom-Glättung mit 4 Stützpunkten — zeichnet das Segment
+      // zwischen p1 und p2 (also dem vorletzten und letzten echten Punkt).
+      const p0 = cv.points[n-4], p1 = cv.points[n-3];
+      const p2 = cv.points[n-2], p3 = cv.points[n-1];
+      const cp = trainerCatmullRomBezier(p0, p1, p2, p3);
+      cv.ctx.beginPath();
+      cv.ctx.moveTo(p1.x, p1.y);
+      cv.ctx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, p2.x, p2.y);
+      cv.ctx.stroke();
+    } else if (n === 3) {
+      // Fallback bei nur 3 Punkten: einfache quadratische Glättung
+      const p0 = cv.points[0], p1 = cv.points[1], p2 = cv.points[2];
+      const m1 = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
+      const m2 = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+      cv.ctx.beginPath();
+      cv.ctx.moveTo(m1.x, m1.y);
+      cv.ctx.quadraticCurveTo(p1.x, p1.y, m2.x, m2.y);
+      cv.ctx.stroke();
+    } else if (n === 2) {
+      // Erstes Segment: kurze gerade Linie, damit der Strich sofort sichtbar ist
+      const p0 = cv.points[0], p1 = cv.points[1];
+      cv.ctx.beginPath();
+      cv.ctx.moveTo(p0.x, p0.y);
+      cv.ctx.lineTo(p1.x, p1.y);
+      cv.ctx.stroke();
+    }
+
+    // Punkt-Buffer klein halten (wir brauchen nur die letzten 4)
+    if (cv.points.length > 8) cv.points.splice(0, cv.points.length - 4);
+
+    // Bewegungs-Detektion für Strich-Zähler
+    if (cv.strichStart) {
+      const dx = punkt.x - cv.strichStart.x;
+      const dy = punkt.y - cv.strichStart.y;
+      if (dx*dx + dy*dy > 25) { // > 5px
+        cv.aktuellerStrichBewegt = true;
+      }
+    }
+  }
+}
+
+function zeichneAuf(e, sIdx) {
+  const cv = activeCanvases[sIdx];
+  if (!cv || !cv.zeichnet) return;
+  if (e.pointerId !== cv.activePointerId) return;
+  if (!isPen(e)) return;
+
+  // ProMotion 120Hz: alle Zwischenpunkte abholen für flüssige Linien
+  const events = (typeof e.getCoalescedEvents === 'function')
+    ? e.getCoalescedEvents()
+    : [e];
+  if (events.length === 0) events.push(e);
+
+  if (werkzeug === "stift") {
+    // Letzter bekannter Punkt (gerendert oder im Buffer)
+    let letzterPunkt = cv.pendingPoints.length > 0
+      ? cv.pendingPoints[cv.pendingPoints.length - 1]
+      : (cv.points.length > 0 ? cv.points[cv.points.length - 1] : null);
+
+    for (const ev of events) {
+      const pos = getPos(ev, cv.canvas);
+      // Mindestabstand-Filter: zu nahe Punkte verwerfen → weniger Jitter
+      if (letzterPunkt) {
+        const dx = pos.x - letzterPunkt.x;
+        const dy = pos.y - letzterPunkt.y;
+        if (dx * dx + dy * dy < TRAINER_MIN_PUNKT_ABSTAND_QUAD) continue;
+      }
+      const punkt = { x: pos.x, y: pos.y, pressure: ev.pressure };
+      cv.pendingPoints.push(punkt);
+      letzterPunkt = punkt;
+    }
+
+    // Rendering auf den nächsten Frame planen (max. 1x pro Refresh).
+    // AUSNAHME: Wenn der Strich noch sehr neu ist, sofort zeichnen,
+    // damit der Beginn jedes neuen Strichs nicht träge wirkt.
+    if ((cv.points.length + cv.pendingPoints.length) < 4) {
+      if (cv.rafId !== null) { cancelAnimationFrame(cv.rafId); cv.rafId = null; }
+      flushStiftFrame(sIdx);
+    } else if (cv.rafId === null && cv.pendingPoints.length > 0) {
+      cv.rafId = requestAnimationFrame(() => flushStiftFrame(sIdx));
+    }
+  } else {
+    // Radierer: weiter direkt rendern — bei Lösch-Operationen ist
+    // unmittelbares Feedback wichtiger als Glättung.
+    cv.ctx.globalCompositeOperation = "destination-out";
+    cv.ctx.strokeStyle = "rgba(0,0,0,1)";
+    cv.ctx.lineWidth = 18;
+
+    for (const ev of events) {
+      const pos = getPos(ev, cv.canvas);
+      cv.points.push(pos);
+      const n = cv.points.length;
+      if (n >= 2) {
+        const p0 = cv.points[n-2];
+        const p1 = cv.points[n-1];
+        cv.ctx.beginPath();
+        cv.ctx.moveTo(p0.x, p0.y);
+        cv.ctx.lineTo(p1.x, p1.y);
+        cv.ctx.stroke();
+      }
+      if (cv.points.length > 6) cv.points.splice(0, cv.points.length - 3);
+    }
+  }
+
+  lastPenActivityTs = performance.now();
+  e.preventDefault();
+}
+
+let trainerSaveTimers = {};
+function stopZeichnen(e, sIdx) {
+  const cv = activeCanvases[sIdx];
+  if (!cv || !cv.zeichnet) return;
+  if (e && e.pointerId !== cv.activePointerId) return;
+
+  // Buffer leeren: noch ungezeichnete Stift-Punkte sofort nachrendern
+  if (cv.rafId !== null) {
+    cancelAnimationFrame(cv.rafId);
+    cv.rafId = null;
+  }
+  if (werkzeug === "stift") {
+    flushStiftFrame(sIdx);
+  }
+
+  // Letztes Bezier-Segment sauber zu-Ende-zeichnen, damit das letzte Stück nicht fehlt
+  if (werkzeug === "stift" && cv.points.length >= 3) {
+    const n = cv.points.length;
+    const p1 = cv.points[n-2];
+    const p2 = cv.points[n-1];
+    const m1 = { x: (cv.points[n-3].x + p1.x) / 2, y: (cv.points[n-3].y + p1.y) / 2 };
+    cv.ctx.beginPath();
+    cv.ctx.moveTo(m1.x, m1.y);
+    cv.ctx.quadraticCurveTo(p1.x, p1.y, p2.x, p2.y);
+    cv.ctx.stroke();
+  }
+
+  cv.zeichnet = false;
+  cv.activePointerId = null;
+  cv.points = [];
+  cv.pendingPoints = [];
+  // Kein releasePointerCapture nötig (siehe startZeichnen).
+
+  if (werkzeug === "stift" && cv.aktuellerStrichBewegt) {
+    cv.striche += 1;
+  }
+  cv.aktuellerStrichBewegt = false;
+  cv.strichStart = null;
+
+  const z = zustand[aktuelleAufgabe][sIdx];
+  z.striche = cv.striche;
+
+  // toDataURL ist teuer (PNG-Encoding) – debouncen, damit der nächste Strich
+  // nicht gebremst wird
+  clearTimeout(trainerSaveTimers[sIdx]);
+  trainerSaveTimers[sIdx] = setTimeout(() => {
+    try { z.canvasDaten = cv.canvas.toDataURL(); } catch(_) {}
+  }, 300);
+
+  aktualisiereVergleichButton(sIdx);
+
+  aktivePenZeichner = Math.max(0, aktivePenZeichner - 1);
+  lastPenActivityTs = performance.now();
+  // Body-Klasse entfernen, wenn kein Canvas mehr aktiv zeichnet
+  if (aktivePenZeichner === 0) {
+    document.body.classList.remove('pen-aktiv');
+  }
+}
+
+function getPos(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function bindCanvasTools() {
+  document.querySelectorAll(".tool-btn[data-werkzeug]").forEach(btn => {
+    btn.onclick = () => {
+      werkzeug = btn.dataset.werkzeug;
+      document.querySelectorAll(".tool-btn[data-werkzeug='stift']").forEach(b => b.classList.toggle("aktiv", werkzeug === "stift"));
+      document.querySelectorAll(".tool-btn[data-werkzeug='radierer']").forEach(b => b.classList.toggle("aktiv", werkzeug === "radierer"));
+    };
+  });
+  document.querySelectorAll(".tool-btn[data-aktion='leeren']").forEach(btn => {
+    btn.onclick = () => {
+      const sIdx = parseInt(btn.dataset.schritt);
+      const wrap = document.getElementById(`canvas-wrapper-${sIdx}`);
+      if (wrap && wrap.classList.contains('gesperrt')) return;
+      const z = zustand[aktuelleAufgabe][sIdx];
+      const cv = activeCanvases[sIdx];
+      cv.ctx.clearRect(0, 0, cv.canvas.width, cv.canvas.height);
+      cv.striche = 0;
+      z.canvasDaten = null;
+      z.striche = 0;
+      aktualisiereVergleichButton(sIdx);
+    };
+  });
+  document.querySelectorAll(".tool-btn[data-aktion='vergroessern']").forEach(btn => {
+    btn.onclick = () => aendereCanvasGroesse(parseInt(btn.dataset.schritt), 100);
+  });
+  document.querySelectorAll(".tool-btn[data-aktion='verkleinern']").forEach(btn => {
+    btn.onclick = () => aendereCanvasGroesse(parseInt(btn.dataset.schritt), -100);
+  });
+}
+
+function aendereCanvasGroesse(sIdx, delta) {
+  const wrap = document.getElementById(`canvas-wrapper-${sIdx}`);
+  if (wrap && wrap.classList.contains('gesperrt')) return;
+  const z = zustand[aktuelleAufgabe][sIdx];
+  const cv = activeCanvases[sIdx];
+  if (!cv) return;
+
+  // Mindesthöhe und Maximalhöhe
+  const neueHoehe = Math.max(110, Math.min(900, cv.hoehe + delta));
+  if (neueHoehe === cv.hoehe) return;
+
+  // Vorherige Zeichnung sichern
+  const altDaten = cv.canvas.toDataURL();
+  cv.hoehe = neueHoehe;
+  z.canvasHoehe = neueHoehe;
+  resizeCanvas(cv.canvas, cv.ctx, neueHoehe);
+
+  // Vorherige Zeichnung wiederherstellen
+  const img = new Image();
+  img.onload = () => {
+    const breite = cv.canvas.parentElement.clientWidth;
+    cv.ctx.drawImage(img, 0, 0, breite, neueHoehe);
+  };
+  img.src = altDaten;
+}
+
+function aktualisiereVergleichButton(sIdx) {
+  const btn = document.getElementById(`vergleich-${sIdx}`);
+  const hinweis = document.getElementById(`hinweis-${sIdx}`);
+  if (!btn) return;
+  const z = zustand[aktuelleAufgabe][sIdx];
+  const wrap = document.getElementById(`canvas-wrapper-${sIdx}`);
+  const istEntsperrt = wrap && !wrap.classList.contains('gesperrt');
+
+  // Bei 'richtig' nur dann "✓ Erledigt" anzeigen, wenn das Canvas noch
+  // gesperrt ist. Ist es entsperrt (= S bearbeitet nachträglich), zeigen
+  // wir den normalen Vergleich-Button.
+  if (z.selbstBewertung === 'richtig' && !istEntsperrt) {
+    btn.disabled = true;
+    btn.textContent = "✓ Erledigt";
+    if (hinweis) hinweis.textContent = "";
+    return;
+  }
+  if (z.loesungAngezeigt && z.selbstBewertung === null) {
+    btn.disabled = true;
+    btn.textContent = "Bewerte deine Lösung";
+    if (hinweis) hinweis.textContent = "";
+    return;
+  }
+
+  const cv = activeCanvases[sIdx];
+  const striche = cv ? cv.striche : (z.striche || 0);
+  if (striche >= MIN_STRICHE) {
+    btn.disabled = false;
+    btn.textContent = "Lösung vergleichen";
+    if (hinweis) hinweis.textContent = "Bereit zum Vergleich.";
+  } else {
+    btn.disabled = true;
+    btn.textContent = "Lösung vergleichen";
+    if (hinweis) hinweis.textContent = "Schreibe deine Lösung mit dem Pencil";
+  }
+}
+
+// ===========================================================
+// LÖSUNG VERGLEICHEN + SELBSTBEWERTUNG
+// ===========================================================
+function loesungVergleichen(sIdx) {
+  const z = zustand[aktuelleAufgabe][sIdx];
+  z.loesungAngezeigt = true;
+
+  const wrapper = document.getElementById(`canvas-wrapper-${sIdx}`);
+  const canvas = document.getElementById(`canvas-${sIdx}`);
+  wrapper.classList.add("gesperrt");
+  canvas.classList.add("gesperrt");
+
+  document.getElementById(`muster-${sIdx}`).style.display = "block";
+  setTimeout(() => {
+    document.getElementById(`muster-${sIdx}`).scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, 100);
+
+  aktualisiereVergleichButton(sIdx);
+}
+
+function selbstBewerten(sIdx, wert) {
+  const z = zustand[aktuelleAufgabe][sIdx];
+  z.versuche += 1;
+  z.zeitstempel = new Date().toISOString();
+  const auf = AUFGABEN[aktuelleAufgabe];
+  const istLetzterSchritt = (auf.modus === "frei") || (sIdx === auf.schritte.length - 1);
+
+  if (wert === 'richtig') {
+    // War schon mal als 'richtig' bewertet (z.B. nach "nachträglich anpassen"
+    // erneut bewertet)? Dann nicht nochmal Punkte vergeben.
+    const warSchonRichtig = (z.selbstBewertung === 'richtig' && z.punkte > 0);
+    z.selbstBewertung = 'richtig';
+    if (!warSchonRichtig) {
+      let basisPunkte;
+      if (auf.modus === "frei") basisPunkte = 8;
+      else basisPunkte = istLetzterSchritt ? 4 : 2;
+      const verdient = (z.versuche === 1) ? basisPunkte : Math.max(1, basisPunkte - 1);
+      z.punkte = verdient;
+      punkte += verdient;
+
+      if (istLetzterSchritt) {
+        streak += 1;
+        besteStreak = Math.max(besteStreak, streak);
+      }
+      aktualisiereStats();
+    }
+    ladeAufgabe(aktuelleAufgabe);
+  } else {
+    z.selbstBewertung = 'falsch';
+    z.loesungAngezeigt = false;
+    document.getElementById(`muster-${sIdx}`).style.display = "none";
+    const wrapper = document.getElementById(`canvas-wrapper-${sIdx}`);
+    const canvas = document.getElementById(`canvas-${sIdx}`);
+    wrapper.classList.remove("gesperrt");
+    canvas.classList.remove("gesperrt");
+
+    if (istLetzterSchritt) {
+      streak = 0;
+      aktualisiereStats();
+    }
+
+    // Bei Schritt-Modus: schritt-spezifische Hilfe automatisch einblenden
+    // Bei freiem Modus: globale Hilfe automatisch einblenden
+    if (auf.modus === "schritte") {
+      const schritt = auf.schritte[sIdx];
+      if (schritt.hilfen && z.hilfenStufe < schritt.hilfen.length) {
+        z.hilfenStufe += 1;
+        zeigeSchrittHilfen(sIdx, true);
+        aktualisiereSchrittHilfeButton(sIdx);
+      }
+    } else {
+      if (hilfenStufe < auf.hilfen.length) {
+        hilfenStufe += 1;
+        zeigeAlleAktivierteHilfen(true);
+        aktualisiereHilfeButton();
+      }
+    }
+    aktualisiereVergleichButton(sIdx);
+  }
+  trainerSpeichern();
+}
+
+// Lösung nachträglich anpassen — entsperrt das Canvas, ohne den
+// 'richtig'-Status oder die Punkte zu verändern. Der nächste Strich auf
+// dem Canvas wird normal als Pen-Eingabe behandelt.
+function loesungNachtraeglichBearbeiten(sIdx) {
+  const auf = AUFGABEN[aktuelleAufgabe];
+  const z = (auf.modus === "frei")
+    ? zustand[aktuelleAufgabe][0]
+    : zustand[aktuelleAufgabe][sIdx];
+  if (!z) return;
+  // Nicht-bewertete Schritte brauchen das gar nicht, dürfen aber durchlaufen
+  z.loesungAngezeigt = false;
+  // selbstBewertung bewusst NICHT zurücksetzen — Punkte und Streak bleiben
+  // so wie sie waren. Der S kann seine Lösung verbessern, ohne dass die
+  // Bewertung erneut abgefragt werden muss.
+
+  // Canvas-Sperre lösen
+  const wrapper = document.getElementById(`canvas-wrapper-${sIdx}`);
+  const canvas = document.getElementById(`canvas-${sIdx}`);
+  if (wrapper) wrapper.classList.remove("gesperrt");
+  if (canvas) canvas.classList.remove("gesperrt");
+
+  // Schritt-Container nicht mehr als 'geloest' anzeigen, sonst wirkt es
+  // optisch abgeschlossen und die S sehen nicht, dass sie aktiv schreiben können.
+  const schrittDiv = document.getElementById(`schritt-${sIdx}`);
+  if (schrittDiv) {
+    schrittDiv.classList.remove("geloest");
+    schrittDiv.classList.add("aktiv");
+  }
+
+  // Musterlösungs-Box ausblenden, damit S erst selbst neu denken muss.
+  const muster = document.getElementById(`muster-${sIdx}`);
+  if (muster) muster.style.display = "none";
+
+  // Den "Lösung vergleichen"-Button wieder aktivieren — S darf danach
+  // erneut vergleichen, wenn er fertig ist.
+  const vbtn = document.getElementById(`vergleich-${sIdx}`);
+  if (vbtn) vbtn.disabled = false;
+
+  trainerSpeichern();
+}
+
+// ===========================================================
+// HILFEN
+// ===========================================================
+function hilfeAnzeigen() {
+  const auf = AUFGABEN[aktuelleAufgabe];
+  if (hilfenStufe >= auf.hilfen.length) return;
+  hilfenStufe += 1;
+  zeigeAlleAktivierteHilfen();
+  aktualisiereHilfeButton();
+  trainerSpeichern();
+}
+
+// Schritt-spezifische Hilfen (für Aufgaben im Schritt-Modus)
+function schrittHilfeAnzeigen(sIdx) {
+  const auf = AUFGABEN[aktuelleAufgabe];
+  if (auf.modus !== "schritte") return;
+  const schritt = auf.schritte[sIdx];
+  if (!schritt.hilfen) return;
+  const z = zustand[aktuelleAufgabe][sIdx];
+  if (z.hilfenStufe >= schritt.hilfen.length) return;
+  z.hilfenStufe += 1;
+  zeigeSchrittHilfen(sIdx);
+  aktualisiereSchrittHilfeButton(sIdx);
+  trainerSpeichern();
+}
+
+function zeigeSchrittHilfen(sIdx, autoLetzte = false) {
+  const auf = AUFGABEN[aktuelleAufgabe];
+  if (auf.modus !== "schritte") return;
+  const schritt = auf.schritte[sIdx];
+  if (!schritt.hilfen) return;
+  const z = zustand[aktuelleAufgabe][sIdx];
+  const cont = document.getElementById(`schritt-hilfe-anzeige-${sIdx}`);
+  if (!cont) return;
+  cont.innerHTML = "";
+  for (let i = 0; i < z.hilfenStufe; i++) {
+    const div = document.createElement("div");
+    div.className = "hilfe-karte";
+    if (autoLetzte && i === z.hilfenStufe - 1) div.classList.add("auto-eingeblendet");
+    div.innerHTML = `<div class="hilfe-titel">Tipp ${i+1}${autoLetzte && i === z.hilfenStufe-1 ? " (automatisch)" : ""}</div><div>${escapeHtml(schritt.hilfen[i])}</div>`;
+    cont.appendChild(div);
+  }
+}
+
+function aktualisiereSchrittHilfeButton(sIdx) {
+  const auf = AUFGABEN[aktuelleAufgabe];
+  if (auf.modus !== "schritte") return;
+  const schritt = auf.schritte[sIdx];
+  if (!schritt.hilfen) return;
+  const z = zustand[aktuelleAufgabe][sIdx];
+  const btn = document.getElementById(`schritt-hilfe-btn-${sIdx}`);
+  if (!btn) return;
+  if (z.hilfenStufe >= schritt.hilfen.length) {
+    btn.textContent = "Alle Tipps angezeigt";
+    btn.disabled = true;
+  } else {
+    btn.textContent = `💡 Tipp anzeigen (${z.hilfenStufe}/${schritt.hilfen.length})`;
+    btn.disabled = false;
+  }
+}
+
+function zeigeAlleAktivierteHilfen(autoLetzte = false) {
+  const auf = AUFGABEN[aktuelleAufgabe];
+  const cont = document.getElementById("hilfe-anzeige");
+  cont.innerHTML = "";
+  for (let i = 0; i < hilfenStufe; i++) {
+    const div = document.createElement("div");
+    div.className = "hilfe-karte";
+    if (autoLetzte && i === hilfenStufe - 1) div.classList.add("auto-eingeblendet");
+    div.innerHTML = `<div class="hilfe-titel">Tipp ${i+1}${autoLetzte && i === hilfenStufe-1 ? " (automatisch)" : ""}</div><div>${escapeHtml(auf.hilfen[i])}</div>`;
+    cont.appendChild(div);
+  }
+}
+
+function aktualisiereHilfeButton() {
+  const auf = AUFGABEN[aktuelleAufgabe];
+  const btn = document.getElementById("hilfe-btn");
+  if (hilfenStufe >= auf.hilfen.length) {
+    btn.textContent = "Alle Tipps angezeigt";
+    btn.disabled = true;
+  } else {
+    btn.textContent = `💡 Tipp anzeigen (${hilfenStufe}/${auf.hilfen.length})`;
+    btn.disabled = false;
+  }
+}
+
+// ===========================================================
+// FORMEL-MODAL
+// ===========================================================
+function formelnAnzeigen() { document.getElementById("formel-modal").classList.add("open"); }
+function formelModalSchliessen() { document.getElementById("formel-modal").classList.remove("open"); }
+
+// ===========================================================
+// NAVIGATION
+// ===========================================================
+function naechsteAufgabe() {
+  if (aktuelleAufgabe < AUFGABEN.length - 1) {
+    ladeAufgabe(aktuelleAufgabe + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } else {
+    uebungenBeenden();
+  }
+}
+function vorherigeAufgabe() {
+  if (aktuelleAufgabe > 0) {
+    ladeAufgabe(aktuelleAufgabe - 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+function aktualisiereStats() {
+  document.getElementById("punkte-anzeige").textContent = punkte;
+  document.getElementById("streak-anzeige").textContent = streak;
+}
+
+// ===========================================================
+// ENDÜBERSICHT — nur bearbeitete Aufgaben
+// ===========================================================
+function uebungenBeenden() {
+  document.getElementById("end-punkte").textContent = punkte;
+  const vollGeloest = zustand.filter(zArr => zArr.every(z => z.selbstBewertung === 'richtig')).length;
+  document.getElementById("end-bearbeitet").textContent = vollGeloest + "/" + AUFGABEN.length;
+  document.getElementById("end-streak").textContent = besteStreak;
+
+  const cont = document.getElementById("ergebnis-container");
+  cont.innerHTML = "";
+
+  let zeigtAufgaben = 0;
+  AUFGABEN.forEach((auf, i) => {
+    // Nur zeigen, wenn mindestens irgendwas bearbeitet wurde
+    const wurdeBearbeitet = zustand[i].some(z => z.canvasDaten || z.selbstBewertung);
+    if (!wurdeBearbeitet) return;
+    zeigtAufgaben++;
+
+    const aufgabeDiv = document.createElement("div");
+    aufgabeDiv.className = "ergebnis-aufgabe";
+
+    const titel = document.createElement("div");
+    titel.className = "ergebnis-aufgabe-titel";
+    titel.textContent = `Aufgabe ${i+1}`;
+    aufgabeDiv.appendChild(titel);
+
+    const text = document.createElement("div");
+    text.className = "ergebnis-aufgabe-text";
+    text.textContent = auf.text;
+    aufgabeDiv.appendChild(text);
+
+    if (auf.modus === "schritte") {
+      auf.schritte.forEach((s, sIdx) => {
+        const z = zustand[i][sIdx];
+        if (!z.canvasDaten && !z.selbstBewertung) return;
+        aufgabeDiv.appendChild(buildErgebnisZeile(s.titel, z));
+      });
+    } else {
+      const z = zustand[i][0];
+      aufgabeDiv.appendChild(buildErgebnisZeile("Lösung", z));
+    }
+
+    cont.appendChild(aufgabeDiv);
+  });
+
+  if (zeigtAufgaben === 0) {
+    cont.innerHTML = "<p style='color:#8C7A5C;font-style:italic;text-align:center;padding:20px;'>Du hast noch keine Aufgabe bearbeitet.</p>";
+  }
+
+  document.getElementById("end-modal").classList.add("open");
+}
+
+function buildErgebnisZeile(label, z) {
+  const zeile = document.createElement("div");
+  zeile.className = "ergebnis-schritt";
+  const lbl = document.createElement("div");
+  lbl.className = "ergebnis-schritt-label";
+  lbl.textContent = label;
+
+  const bild = document.createElement("div");
+  bild.className = "ergebnis-schritt-bild";
+  if (z.canvasDaten) {
+    const img = document.createElement("img");
+    img.src = z.canvasDaten;
+    bild.appendChild(img);
+  } else {
+    bild.classList.add("leer");
+    bild.textContent = "(nicht bearbeitet)";
+  }
+
+  const status = document.createElement("div");
+  status.className = "ergebnis-status";
+  if (z.selbstBewertung === 'richtig') {
+    status.classList.add("korrekt");
+    status.innerHTML = `✓ Richtig${z.versuche > 1 ? ` (${z.versuche}. Versuch)` : ""}`;
+    if (z.zeitstempel) {
+      const t = new Date(z.zeitstempel);
+      const zeitStr = t.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+      status.innerHTML += `<span class="ergebnis-zeit">${zeitStr} Uhr</span>`;
+    }
+  } else if (z.canvasDaten) {
+    status.classList.add("falsch");
+    status.textContent = "Nicht abgeschlossen";
+  } else {
+    status.classList.add("uebersprungen");
+    status.textContent = "—";
+  }
+
+  zeile.appendChild(lbl);
+  zeile.appendChild(bild);
+  zeile.appendChild(status);
+  return zeile;
+}
+
+function modalSchliessen() { document.getElementById("end-modal").classList.remove("open"); }
+function neuStarten() {
+  punkte = 0; streak = 0; besteStreak = 0; aktuelleAufgabe = 0; hilfenStufe = 0;
+  zustand = AUFGABEN.map(auf => {
+    if (auf.modus === "schritte") return auf.schritte.map(() => leererZustand());
+    return [leererZustand()];
+  });
+  // Auch gespeicherten Zustand auf dem LMS leeren, damit beim nächsten
+  // Reload nicht der alte Zustand wieder geladen wird.
+  try { window.Storage.clear(TRAINER_KEY); } catch(_) {}
+  trainerSpeichern();
+  aktualisiereStats();
+  modalSchliessen();
+  ladeAufgabe(0);
+}
+
+// ===========================================================
+// EXPORT — JSON
+// ===========================================================
+function exportJSON() {
+  const daten = {
+    schueler: schuelerName,
+    klasse: "8c",
+    schule: "Alexander-von-Humboldt-Gymnasium",
+    startZeit: startZeit,
+    endZeit: new Date().toISOString(),
+    punkte: punkte,
+    besteStreak: besteStreak,
+    aufgaben: AUFGABEN.map((auf, i) => {
+      const aufgabenZustand = zustand[i];
+      const wurdeBearbeitet = aufgabenZustand.some(z => z.canvasDaten || z.selbstBewertung);
+      if (!wurdeBearbeitet) return null;
+      return {
+        nummer: i + 1,
+        text: auf.text,
+        modus: auf.modus,
+        schritte: aufgabenZustand.map((z, sIdx) => ({
+          titel: auf.modus === "schritte" ? auf.schritte[sIdx].titel : "Lösung",
+          canvasBildPNG: z.canvasDaten,
+          selbstBewertung: z.selbstBewertung,
+          versuche: z.versuche,
+          punkte: z.punkte,
+          zeitstempel: z.zeitstempel
+        }))
+      };
+    }).filter(x => x !== null)
+  };
+  const blob = new Blob([JSON.stringify(daten, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Stoechio_${dateiNameSafe(schuelerName)}_${datumKurz()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ===========================================================
+// EXPORT — PDF (über window.print mit dediziertem Layout)
+// ===========================================================
+function exportPDF() {
+  const w = window.open("", "_blank");
+  if (!w) {
+    alert("Bitte Pop-ups für diese Seite erlauben, damit die PDF erzeugt werden kann.");
+    return;
+  }
+
+  let html = `
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Stöchio-Trainer — ${escapeHtml(schuelerName)}</title>
+<style>
+  @page { size: A4; margin: 1.5cm; }
+  body { font-family: 'Helvetica', 'Arial', sans-serif; color: #2D2A26; font-size: 11pt; }
+  h1 { font-size: 18pt; margin: 0 0 6pt; }
+  .schule { color: #6B5D4A; font-size: 10pt; margin-bottom: 16pt; }
+  .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8pt; margin-bottom: 18pt; }
+  .meta-box { background: #F9F2DF; border-radius: 6pt; padding: 8pt; text-align: center; }
+  .meta-label { font-size: 8pt; color: #6B5D4A; text-transform: uppercase; letter-spacing: 0.04em; }
+  .meta-wert { font-size: 16pt; color: #5C4033; font-weight: bold; margin-top: 2pt; }
+  .aufgabe { page-break-inside: avoid; margin-bottom: 18pt; padding-top: 8pt; border-top: 1pt solid #E8DEC4; }
+  .aufgabe-titel { font-weight: bold; color: #5C4033; font-size: 12pt; margin-bottom: 4pt; }
+  .aufgabe-text { font-style: italic; color: #6B5D4A; margin-bottom: 8pt; font-size: 10pt; }
+  .schritt { margin-bottom: 8pt; }
+  .schritt-label { font-size: 9pt; color: #6B5D4A; text-transform: uppercase; font-weight: bold; margin-bottom: 4pt; }
+  .schritt-bild { background: #FFFBF2; border: 1pt solid #D9CFB8; border-radius: 4pt; padding: 4pt; max-width: 100%; }
+  .schritt-bild img { max-width: 100%; height: auto; display: block; }
+  .schritt-status { font-size: 9pt; margin-top: 2pt; }
+  .korrekt { color: #3F6230; }
+  .falsch { color: #8B3A2A; }
+  .footer { margin-top: 20pt; font-size: 8pt; color: #8C7A5C; text-align: center; }
+</style></head><body>
+<h1>Stöchio-Trainer · Auswertung</h1>
+<div class="schule">Alexander-von-Humboldt-Gymnasium · Klasse 8c · ${escapeHtml(schuelerName)} · ${new Date().toLocaleDateString("de-DE")}</div>
+
+<div class="meta">
+  <div class="meta-box"><div class="meta-label">Punkte</div><div class="meta-wert">${punkte}</div></div>
+  <div class="meta-box"><div class="meta-label">Vollständig gelöst</div><div class="meta-wert">${zustand.filter(zArr => zArr.every(z => z.selbstBewertung === 'richtig')).length} / ${AUFGABEN.length}</div></div>
+  <div class="meta-box"><div class="meta-label">Beste Streak</div><div class="meta-wert">${besteStreak}</div></div>
+</div>
+`;
+
+  AUFGABEN.forEach((auf, i) => {
+    const aufgabenZustand = zustand[i];
+    const wurdeBearbeitet = aufgabenZustand.some(z => z.canvasDaten || z.selbstBewertung);
+    if (!wurdeBearbeitet) return;
+
+    html += `<div class="aufgabe">
+      <div class="aufgabe-titel">Aufgabe ${i+1}</div>
+      <div class="aufgabe-text">${escapeHtml(auf.text)}</div>`;
+
+    aufgabenZustand.forEach((z, sIdx) => {
+      if (!z.canvasDaten && !z.selbstBewertung) return;
+      const label = auf.modus === "schritte" ? auf.schritte[sIdx].titel : "Lösung";
+      let statusHtml = "";
+      if (z.selbstBewertung === 'richtig') {
+        statusHtml = `<div class="schritt-status korrekt">✓ Richtig${z.versuche > 1 ? ` (${z.versuche}. Versuch)` : ""}${z.zeitstempel ? " · " + new Date(z.zeitstempel).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) + " Uhr" : ""}</div>`;
+      } else if (z.canvasDaten) {
+        statusHtml = `<div class="schritt-status falsch">Nicht abgeschlossen</div>`;
+      }
+      html += `<div class="schritt">
+        <div class="schritt-label">${label}</div>
+        ${z.canvasDaten ? `<div class="schritt-bild"><img src="${z.canvasDaten}"></div>` : ""}
+        ${statusHtml}
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  html += `<div class="footer">Erzeugt mit dem Stöchio-Trainer 8c · ${new Date().toLocaleString("de-DE")}</div>
+<script>window.onload = function(){ setTimeout(function(){ window.print(); }, 500); };<\/script>
+</body></html>`;
+
+  w.document.write(html);
+  w.document.close();
+}
+
+// Helpers
+function dateiNameSafe(s) { return (s || "schueler").replace(/[^a-zA-Z0-9_-]+/g, "_"); }
+function datumKurz() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+function escapeHtml(s) {
+  const div = document.createElement("div");
+  div.textContent = s == null ? "" : s;
+  return div.innerHTML;
+}
+
+// Auto-Focus auf Namensfeld beim Laden, damit Hardware-Tastatur direkt funktioniert
+window.addEventListener('DOMContentLoaded', () => {
+  // Erst prüfen, ob eine vorhandene Session da ist — dann automatisch wiederherstellen.
+  // Storage.init() wurde von scorm-adapter.js bereits aufgerufen, falls verfügbar.
+  // Falls Storage gerade noch initialisiert: kurz warten.
+  function tryRestore(retries) {
+    if (!window.Storage || !window.Storage.isReady()) {
+      if (retries > 0) return setTimeout(() => tryRestore(retries - 1), 50);
+    }
+    const daten = trainerLaden();
+    if (daten && daten.schuelerName) {
+      // Vorhandene Session — direkt einsteigen
+      try { trainerWiederherstellen(daten); }
+      catch(e) { console.warn('Wiederherstellen fehlgeschlagen, starte neu', e); zeigeStartbildschirm(); }
+    } else {
+      zeigeStartbildschirm();
+    }
+  }
+  function zeigeStartbildschirm() {
+    const nameInput = document.getElementById('schueler-name');
+    if (nameInput) {
+      setTimeout(() => { try { nameInput.focus(); } catch(_) {} }, 200);
+    }
+  }
+  tryRestore(20); // bis zu 1s warten
+});
+
+// Reset-Funktion: erlaubt S, alles zu löschen und neu zu starten.
+// Wird über den "Übung beenden"/"Neu starten"-Button im Trainer aufgerufen.
+function trainerKomplettZuruecksetzen() {
+  if (!confirm('Wirklich alles löschen und neu starten? Dein Fortschritt geht verloren.')) return;
+  try { window.Storage.clear(TRAINER_KEY); } catch(_) {}
+  location.reload();
+}
+
+// ===========================================================
+// SELECTION-KILLER: jegliche Selection global verhindern
+// ===========================================================
+// Der härteste Hammer: selectstart abfangen, bevor iOS überhaupt
+// anfängt zu selektieren. AUSNAHME: Eingabefelder (Name, etc.).
+document.addEventListener('selectstart', (e) => {
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || (t.isContentEditable))) return;
+  e.preventDefault();
+  return false;
+}, true);
+// Selection-API zusätzlich nach jedem touch leeren (iOS-Edge-Case)
+document.addEventListener('touchstart', (e) => {
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || (t.isContentEditable))) return;
+  const sel = window.getSelection && window.getSelection();
+  if (sel && sel.removeAllRanges) sel.removeAllRanges();
+}, { passive: true, capture: true });
+
+// ===========================================================
+// Globaler Pen-Click-Schutz (zeitbasiert, ohne CSS-Klasse)
+// ===========================================================
+// Während ein Pen aktiv schreibt ODER kurz danach: blockiere Klicks/Pointer
+// auf alle Elemente AUSSER Canvases. Das verhindert, dass Buttons unter dem
+// Schreibfeld versehentlich ausgelöst werden, ohne dass eine globale Klasse
+// hängenbleiben kann (was zuvor das "Pencil schreibt nicht mehr"-Problem
+// verursachen konnte).
+const PEN_CLICK_BLOCK_MS = 150; // war 350 — kürzer, damit schnelle Folgestriche nicht blockiert werden
+
+function penIstAktiv() {
+  // Selbst-Korrektur: Wenn der Counter behauptet, es zeichnet jemand,
+  // aber kein einziger Canvas wirklich zeichnet → Counter zurücksetzen.
+  // Schützt gegen Drift, der sonst dauerhaft Klicks blocken würde.
+  if (aktivePenZeichner > 0) {
+    const tatsaechlich = Object.values(activeCanvases).filter(c => c && c.zeichnet).length;
+    if (tatsaechlich === 0) {
+      aktivePenZeichner = 0;
+    }
+  }
+  if (aktivePenZeichner > 0) return true;
+  if (lastPenActivityTs && (performance.now() - lastPenActivityTs) < PEN_CLICK_BLOCK_MS) return true;
+  return false;
+}
+
+function istCanvasZiel(target) {
+  if (!target) return false;
+  if (target.tagName === 'CANVAS') return true;
+  if (target.classList && target.classList.contains('zeichnen')) return true;
+  // Auch der Wrapper, Pen-Puffer und Bereich rund um die Canvas zählen
+  // — sonst werden schnelle Folge-Striche blockiert, die knapp daneben landen.
+  if (target.closest && target.closest('.canvas-wrapper')) return true;
+  return false;
+}
+
+['click', 'pointerdown'].forEach(evt => {
+  document.addEventListener(evt, (e) => {
+    // Pointer-Events vom echten Pencil dürfen immer durch (Canvas braucht sie)
+    if (e.pointerType === 'pen') return;
+    if (!penIstAktiv()) return;
+    if (istCanvasZiel(e.target)) return;
+    e.stopPropagation();
+    e.preventDefault();
+  }, true); // capture: true
+});
+
+// Sicherheits-Netz: Wenn pointerup/pointercancel aus irgendeinem Grund
+// nicht am Canvas ankommt, räumen wir den Zustand global auf.
+['pointerup', 'pointercancel'].forEach(evt => {
+  window.addEventListener(evt, (e) => {
+    if (e.pointerType !== 'pen') return;
+    Object.keys(activeCanvases).forEach(k => {
+      const cv = activeCanvases[k];
+      if (cv && cv.zeichnet && cv.activePointerId === e.pointerId) {
+        try { stopZeichnen(e, parseInt(k)); } catch(_) {
+          cv.zeichnet = false;
+          cv.activePointerId = null;
+          cv.points = [];
+          cv.pendingPoints = [];
+          if (cv.rafId !== null) { cancelAnimationFrame(cv.rafId); cv.rafId = null; }
+          aktivePenZeichner = Math.max(0, aktivePenZeichner - 1);
+        }
+      }
+    });
+    lastPenActivityTs = performance.now();
+    // Body-Klasse aufräumen, falls hängengeblieben
+    if (aktivePenZeichner === 0) {
+      document.body.classList.remove('pen-aktiv');
+    }
+  });
+});
+
+// Pointermove-Backup auf window: Wenn der Pencil kurz den Canvas verlässt
+// (z.B. an den Rand schreibt), kommen pointermove-Events vom Canvas-Listener
+// nicht mehr an. Da wir kein setPointerCapture mehr nutzen, ziehen wir die
+// Events hier global mit, solange ein Canvas aktiv zeichnet.
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'pen') return;
+  if (aktivePenZeichner === 0) return;
+  Object.keys(activeCanvases).forEach(k => {
+    const cv = activeCanvases[k];
+    if (cv && cv.zeichnet && cv.activePointerId === e.pointerId) {
+      // Nur weiterleiten, wenn das Event NICHT schon vom Canvas verarbeitet wurde
+      // (sonst doppelte Punkte). Wir prüfen: Ist das Ziel der Canvas selbst?
+      if (e.target !== cv.canvas) {
+        zeichneAuf(e, parseInt(k));
+      }
+    }
+  });
+});
+
+// Handballen-Schutz, robust:
+// Ein Touch-Klick auf Buttons in der Schritt-Karte oder canvas-tools wird
+// für 180ms verzögert. Wenn in dieser Zeit der Pencil aufsetzt (=neuer
+// pen pointerdown), wird der Touch-Klick verworfen. Damit fängt es auch
+// den klassischen Fall: "Handballen kommt zuerst auf, Pencil eine
+// Sekundenbruchteile später" — der war mit reinem zeitbasierten Schutz
+// nicht abzufangen, weil bei Handballen-Touch noch kein Pen aktiv war.
+const TOUCH_VERZOEGERUNG_MS = 100; // war 180 — kürzer, damit Buttons sich responsiver anfühlen
+let pendingTouchClicks = []; // {timeoutId, target, ts}
+let lastPenDownTs = 0;
+
+function istGeschuetzterButton(t) {
+  if (!t || !t.closest) return false;
+  if (t.closest('.schritt') && (t.tagName === 'BUTTON' || t.closest('button'))) return true;
+  if (t.closest('.canvas-tools')) return true;
+  if (t.closest('.hilfe-btn')) return true;
+  if (t.closest('.vergleich-btn')) return true;
+  if (t.closest('.selbst-btn')) return true;
+  return false;
+}
+
+// Pen-Down sofort registrieren, damit pendingTouchClicks gecanceled werden
+document.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'pen') {
+    lastPenDownTs = performance.now();
+    // Alle wartenden Touch-Klicks sofort verwerfen
+    pendingTouchClicks.forEach(p => clearTimeout(p.timeoutId));
+    pendingTouchClicks = [];
+  }
+}, true);
+
+// Touch-pointerdown auf geschützten Buttons → Click präventiv blocken,
+// stattdessen verzögert ausführen.
+document.addEventListener('pointerdown', (e) => {
+  if (e.pointerType !== 'touch') return;
+  if (!istGeschuetzterButton(e.target)) return;
+  // Alles weitere via click-Handler unten erledigen — hier nur preventDefault
+  // ist nicht nötig, weil wir ja den click selbst abfangen.
+}, true);
+
+document.addEventListener('click', (e) => {
+  // Erkennt Touch-Klicks: pointerType auf click ist 'touch' (oder leer in
+  // älteren Browsern); echte Pencil-Klicks haben 'pen'.
+  const istTouch = (e.pointerType === 'touch') || (e.pointerType === '' && e.detail === 0);
+  // Unmittelbar nach Pen-Down: alles für 250ms blocken (synthetischer Click)
+  const seitPen = performance.now() - lastPenDownTs;
+  if (seitPen < 250 && istGeschuetzterButton(e.target)) {
+    e.stopPropagation();
+    e.preventDefault();
+    return;
+  }
+  // Wenn Pen aktiv: alles blocken außer Pen-Klicks
+  if (penIstAktiv() && e.pointerType !== 'pen' && istGeschuetzterButton(e.target)) {
+    e.stopPropagation();
+    e.preventDefault();
+    return;
+  }
+  // Touch-Klick auf geschützten Button → 180ms warten
+  if (istTouch && istGeschuetzterButton(e.target)) {
+    e.stopPropagation();
+    e.preventDefault();
+    const target = e.target;
+    const targetButton = target.closest('button');
+    if (!targetButton) return;
+    const startTs = performance.now();
+    const timeoutId = setTimeout(() => {
+      // Wenn in der Zwischenzeit ein Pen-Down kam → verwerfen
+      if (lastPenDownTs > startTs) return;
+      // Sonst: Button-Klick programmatisch auslösen
+      try { targetButton.click(); } catch(_) {}
+      pendingTouchClicks = pendingTouchClicks.filter(p => p.timeoutId !== timeoutId);
+    }, TOUCH_VERZOEGERUNG_MS);
+    pendingTouchClicks.push({ timeoutId, target: targetButton, ts: startTs });
+  }
+}, true);
+
+// ===========================================================
+// DEBUG-MODUS: aktivieren mit ?debug=1 in der URL
+// Zeigt oben rechts ein Overlay, das jedes Pointer-Event protokolliert.
+// Nützlich, um zu sehen, was iOS dem Browser meldet, wenn der Pencil
+// sich nicht "wie ein Pencil" verhält.
+// ===========================================================
+if (location.search.includes('debug=1')) {
+  const overlay = document.createElement('div');
+  overlay.id = 'debug-overlay';
+  overlay.style.cssText = `
+    position: fixed; top: 8px; right: 8px; width: 280px; max-height: 70vh;
+    overflow-y: auto; background: rgba(0,0,0,0.8); color: #0f0;
+    font-family: monospace; font-size: 10px; padding: 8px; border-radius: 6px;
+    z-index: 99999; pointer-events: none; line-height: 1.3;
+  `;
+  overlay.innerHTML = '<div style="color:#fff;font-weight:bold;margin-bottom:4px;">Pointer-Debug</div><div id="debug-log"></div>';
+  document.body.appendChild(overlay);
+  const log = overlay.querySelector('#debug-log');
+  let lines = [];
+  function dlog(msg) {
+    lines.unshift(msg);
+    if (lines.length > 30) lines.pop();
+    log.innerHTML = lines.join('<br>');
+  }
+  ['pointerdown', 'pointerup', 'pointercancel'].forEach(evt => {
+    window.addEventListener(evt, (e) => {
+      const isPenResult = isPen(e);
+      const t = e.target && e.target.tagName ? e.target.tagName : '?';
+      const cls = e.target && e.target.className && typeof e.target.className === 'string'
+                  ? e.target.className.substr(0, 20) : '';
+      const farbe = isPenResult ? '#0f0' : (e.pointerType === 'touch' ? '#fa0' : '#aaa');
+      dlog(`<span style="color:${farbe}">${evt.substr(7)}</span> typ=${e.pointerType||'?'} p=${(e.pressure||0).toFixed(2)} tilt=${(e.tiltX||0)},${(e.tiltY||0)} → ${t}.${cls} ${isPenResult ? '✏️' : '👆'}`);
+    }, true);
+  });
+  dlog('<span style="color:#fff">Debug aktiv. Striche zeigen Type, Druck, Tilt.</span>');
+}
+
+// Zurück-Pfeil: wenn der Trainer aktiv ist (mitten im Üben), kurz nachfragen,
+// damit der Schüler nicht versehentlich seinen Fortschritt der laufenden
+// Sitzung verliert.
+document.getElementById('zurueck-uebersicht').addEventListener('click', function(e) {
+  const trainerAktiv = !document.getElementById('trainer').classList.contains('versteckt');
+  if (trainerAktiv) {
+    if (!confirm('Zur Übersicht zurückkehren?\n\nDein Fortschritt bleibt gespeichert — du kannst später hier weitermachen.')) {
+      e.preventDefault();
+    }
+  }
+});
+
+/* ---- Farbpalette: Click-Handler ---- */
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.farb-btn');
+  if (!btn) return;
+  const farbe = btn.dataset.farbe;
+  if (!farbe) return;
+  stiftFarbe = farbe;
+  // Aktiv-Markierung in allen Paletten synchronisieren
+  document.querySelectorAll('.farbpalette').forEach(p => {
+    p.querySelectorAll('.farb-btn').forEach(b => b.classList.toggle('aktiv', b.dataset.farbe === farbe));
+  });
+});
+
+</script>
+
+</body>
+</html>
