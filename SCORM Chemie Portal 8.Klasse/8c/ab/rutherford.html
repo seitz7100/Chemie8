@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>AB Vom Atom zur Verbindung – 8c</title>
+<link rel="stylesheet" href="../../shared/ab-engine.css">
+<script src="../../shared/jspdf.umd.min.js"></script>
+<script src="../../shared/scorm-adapter.js"></script>
+<script src="../grundwissen-pool.js"></script>
+<script src="../../shared/ab-engine.js"></script>
+<script src="../../shared/ab-pdf.js"></script>
+<style>
+  .dual-sim {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 12px 0 18px;
+  }
+  @media (max-width: 720px) {
+    .dual-sim { grid-template-columns: 1fr; }
+  }
+  .dual-sim .sim-half {
+    background: #FFF;
+    border: 2px solid var(--grey-line, #D5DCE5);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .dual-sim .sim-half-header {
+    background: #F5F8FA;
+    padding: 8px 12px;
+    font-weight: bold;
+    border-bottom: 1px solid var(--grey-line, #D5DCE5);
+    font-size: 14px;
+  }
+  .dual-sim .sim-half.dalton .sim-half-header {
+    background: #FFF3E0;
+    color: #E65100;
+  }
+  .dual-sim .sim-half.realitaet .sim-half-header {
+    background: #E8F4FB;
+    color: #0091C7;
+  }
+  .dual-sim canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #FAFAFA;
+  }
+  .dual-sim-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .bausteine-tab {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 14px;
+  }
+  .bausteine-tab th, .bausteine-tab td {
+    padding: 6px 10px;
+    border: 1px solid #D5DCE5;
+    text-align: center;
+  }
+  .bausteine-tab th { background: #F5F8FA; font-weight: bold; }
+  .bausteine-tab tbody tr:nth-child(odd) { background: #FAFCFE; }
+  .bausteine-tab td:first-child { text-align: left; font-weight: bold; }
+
+/* MINDMAP — Drag-and-Drop Aufgabe */
+.mindmap-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  margin: 18px auto 4px auto;
+  aspect-ratio: 700 / 1050;
+  font-family: inherit;
+}
+.mm-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.mm-box {
+  position: absolute;
+  background: #E5EAEF;
+  border: 1.5px solid #7E92AB;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #5A6B7E;
+  text-align: center;
+  padding: 2px 6px;
+  font-family: inherit;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  transition: background 0.12s, border-color 0.12s, transform 0.08s;
+  line-height: 1.15;
+  word-break: break-word;
+  cursor: default;
+}
+.mm-box::before {
+  content: "...";
+  color: #B8C4D2;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+.mm-box.gefuellt::before { content: ""; }
+.mm-box.gefuellt {
+  background: #FFFFFF;
+  border-color: #5A6B7E;
+  color: #2D2A26;
+  font-weight: 600;
+  cursor: grab;
+}
+.mm-box.gefuellt:active { cursor: grabbing; }
+.mm-box.hover {
+  background: #FFF8E1;
+  border-color: #F0B400;
+  border-style: dashed;
+}
+.mm-helper {
+  position: absolute;
+  background: #F0F2F5;
+  border: 1px solid #C8D0DA;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  color: #444;
+  text-align: center;
+  font-style: normal;
+  line-height: 1.3;
+  pointer-events: none;
+}
+.mm-quelle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px;
+  margin-top: 18px;
+  background: #FAFAFA;
+  border: 1.5px dashed #B8C4D2;
+  border-radius: 8px;
+  justify-content: center;
+  min-height: 60px;
+}
+.mm-card {
+  background: #FFFFFF;
+  border: 1.5px solid #5A6B7E;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 13.5px;
+  color: #2D2A26;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  font-family: inherit;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+.mm-card:active { cursor: grabbing; }
+.mm-card.dragging {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  transform: scale(1.05);
+}
+
+</style>
+</head>
+<body>
+
+<div class="ab-container">
+
+  <div class="ab-zurueck-leiste">
+    <a href="../arbeitsblaetter.html" class="ab-zurueck-link">← Zurück zur Übersicht</a>
+  </div>
+
+  <div class="ab-header">
+    <h1>Vom Atom zur Verbindung</h1>
+    <div class="meta">07.05.2026&nbsp;&nbsp;8c</div>
+  </div>
+
+  <h2 class="section">Rutherfords Streuversuch (1909)</h2>
+  <p class="lead"><strong>Aufbau:</strong> Ernest Rutherford schießt mit einer α-Strahlen-Quelle positiv geladene α-Teilchen (große Masse, schnell) durch eine Blende auf eine extrem dünne Goldfolie (nur ca. 2000 Atome dick). Rund um die Folie wird ein ringförmiger Leuchtschirm aufgestellt, der jeden Treffer als Lichtblitz sichtbar macht.</p>
+
+  <div class="dual-sim">
+    <div class="sim-half dalton">
+      <div class="sim-half-header">🟠 Erwartung nach Thomson</div>
+      <canvas id="sim-erwartung" width="400" height="360"></canvas>
+    </div>
+    <div class="sim-half realitaet">
+      <div class="sim-half-header">🔵 Rutherfords Ergebnis</div>
+      <canvas id="sim-realitaet" width="400" height="360"></canvas>
+    </div>
+  </div>
+  <div class="dual-sim-controls">
+    <button class="sim-btn" data-action="dual-start">▶ Beide starten</button>
+    <button class="sim-btn secondary" data-action="dual-reset">↺ Zurücksetzen</button>
+  </div>
+
+  <div class="aufgabe-block" data-aufgabe="1">
+    <h2 class="section">Aufgabe 1 — Das Kern-Hülle-Modell</h2>
+    <div class="info-box">
+      <strong>Rutherfords Erklärung:</strong> Fast die <em>gesamte</em> Masse und die <em>ganze</em> positive Ladung sind in einem winzig kleinen, sehr dichten <strong>Atomkern</strong> konzentriert. Der Rest des Atoms — die <strong>Atomhülle</strong> — ist überwiegend <em>leerer Raum</em>, in dem sich die <strong>Elektronen</strong> bewegen. Die Hülle ist etwa 100 000-mal größer als der Kern.
+      <br><br>
+      <strong>Die Bausteine des Atoms:</strong> Der Atomkern besteht aus <strong>Protonen</strong> (positiv geladen) und <strong>Neutronen</strong> (ungeladen). In der Hülle: die <strong>Elektronen</strong>.
+      <table class="bausteine-tab">
+        <thead>
+          <tr><th>Teilchen</th><th>Symbol</th><th>Ladung</th><th>Masse</th><th>Ort</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Proton</td><td>p⁺</td><td>+1</td><td>1 u</td><td>Kern</td></tr>
+          <tr><td>Neutron</td><td>n</td><td>0</td><td>1 u</td><td>Kern</td></tr>
+          <tr><td>Elektron</td><td>e⁻</td><td>−1</td><td>≈ 0,0005 u</td><td>Hülle</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="aufgabe">
+      <div class="aufgabe-text">
+        <span class="aufgabe-op">Skizziere</span> ein Atom nach dem Kern-Hülle-Modell. <span class="aufgabe-op">Beschrifte</span>: <em>Atomkern, Atomhülle, Proton, Neutron, Elektron</em>.
+      </div>
+      <div class="canvas-wrap" data-canvas="r2a"><canvas></canvas>
+        <div class="canvas-toolbar">
+          <button class="tool-btn" data-canvas-action="bigger" data-target="r2a">↕ Größer</button>
+          <button class="tool-btn undo" data-canvas-action="undo" data-target="r2a" disabled>↶ Rückgängig</button>
+          <span class="farbpalette">
+            <button class="farb-btn aktiv" data-farbe="#1A3A5C" style="background:#1A3A5C"></button>
+            <button class="farb-btn" data-farbe="#000000" style="background:#000000"></button>
+            <button class="farb-btn" data-farbe="#C62828" style="background:#C62828"></button>
+            <button class="farb-btn" data-farbe="#2E7D32" style="background:#2E7D32"></button>
+            <button class="farb-btn" data-farbe="#EF6C00" style="background:#EF6C00"></button>
+            <button class="farb-btn" data-farbe="#6A1B9A" style="background:#6A1B9A"></button>
+            <button class="farb-btn farb-radierer" data-farbe="#FFFFFF" style="background:#FFFFFF" title="Radierer (malt weiß)">🧽</button>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="aufgabe-fertig-row">
+      <button class="workflow-btn" data-workflow="fertig" data-aufgabe="1">✓ Aufgabe fertig</button>
+    </div>
+  </div>
+
+  <div class="aufgabe-block" data-aufgabe="2" hidden>
+    <h2 class="section">Aufgabe 2 — Was passiert auf Teilchen-Ebene?</h2>
+    <p class="lead"><strong>Versuch:</strong> Wir lösen <strong>Salz</strong> in destilliertem Wasser und prüfen, ob Strom fließt. Dasselbe machen wir mit <strong>Zucker</strong>.</p>
+    <p class="lead"><strong>Beobachtung:</strong> Die Lampe leuchtet bei der <strong>Salz</strong>lösung — bei der <strong>Zucker</strong>lösung und reinem destilliertem Wasser leuchtet sie <strong>nicht</strong>.</p>
+    <div class="info-box">
+      In der Salzlösung gibt es <strong>Ionen</strong> — geladene Teilchen. In der Zuckerlösung sind die Teilchen <strong>Moleküle</strong> — Verbünde aus mehreren Atomen.
+    </div>
+
+    <p class="lead">Die Animation zeigt, was beim Lösen <em>auf Teilchen-Ebene</em> passiert. Klicke auf einen der Buttons:</p>
+
+    <div class="sim-box" data-sim="loesen">
+      <div class="sim-header">
+        <span>🧂 Salz vs. Zucker im Wasser</span>
+        <span style="font-weight:normal; font-size:12px;">Stoff wählen</span>
+      </div>
+      <div class="sim-canvas-wrap">
+        <canvas id="sim-loesen" width="800" height="380" style="width:100%; height:auto; display:block;"></canvas>
+      </div>
+      <div class="sim-controls" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; padding:8px;">
+        <button class="sim-btn" data-action="loesen-salz">🧂 Salz lösen</button>
+        <button class="sim-btn" data-action="loesen-zucker">🍬 Zucker lösen</button>
+        <button class="sim-btn secondary" data-action="loesen-reset">↺ Zurücksetzen</button>
+      </div>
+    </div>
+
+    <div class="aufgabe">
+      <div class="aufgabe-text">
+        <span class="aufgabe-op">Beschreibe</span> deine Beobachtungen aus der Animation und <span class="aufgabe-op">erkläre</span> damit, warum Salzwasser den Strom leitet, Zuckerwasser aber nicht. Achte besonders auf die Ladungen der Teilchen.
+      </div>
+      <div class="canvas-wrap" data-canvas="r4a"><canvas></canvas>
+        <div class="canvas-toolbar">
+          <button class="tool-btn" data-canvas-action="bigger" data-target="r4a">↕ Größer</button>
+          <button class="tool-btn undo" data-canvas-action="undo" data-target="r4a" disabled>↶ Rückgängig</button>
+          <span class="farbpalette">
+            <button class="farb-btn aktiv" data-farbe="#1A3A5C" style="background:#1A3A5C"></button>
+            <button class="farb-btn" data-farbe="#000000" style="background:#000000"></button>
+            <button class="farb-btn" data-farbe="#C62828" style="background:#C62828"></button>
+            <button class="farb-btn" data-farbe="#2E7D32" style="background:#2E7D32"></button>
+            <button class="farb-btn" data-farbe="#EF6C00" style="background:#EF6C00"></button>
+            <button class="farb-btn" data-farbe="#6A1B9A" style="background:#6A1B9A"></button>
+            <button class="farb-btn farb-radierer" data-farbe="#FFFFFF" style="background:#FFFFFF" title="Radierer (malt weiß)">🧽</button>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="aufgabe-fertig-row">
+      <button class="workflow-btn" data-workflow="fertig" data-aufgabe="2">✓ Aufgabe fertig</button>
+    </div>
+  </div>
+
+  <div class="aufgabe-block" data-aufgabe="3" hidden>
+    <h2 class="section">Aufgabe 3 — Stoffe einordnen</h2>
+    <p class="lead">Ziehe die Begriffe an die richtigen Stellen in der Mindmap. Bei einer falschen Position springt der Begriff zurück.</p>
+
+    <div class="mindmap-wrap">
+      <svg class="mm-svg" viewBox="0 0 700 1050" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="mm-arrow-up" markerWidth="10" markerHeight="10" refX="5" refY="2" orient="auto">
+            <polygon points="0,8 10,8 5,0" fill="#7E92AB"/>
+          </marker>
+        </defs>
+
+        <!-- ALLE Pfeile zeigen nach OBEN bzw. nach AUSSEN -->
+        <g stroke="#7E92AB" stroke-width="2" fill="none">
+          <!-- homogen + heterogen → Stoffgemische (Pfeile zur Mitte hoch) -->
+          <line x1="220" y1="900" x2="350" y2="785" marker-end="url(#mm-arrow-up)"/>
+          <line x1="560" y1="900" x2="350" y2="785" marker-end="url(#mm-arrow-up)"/>
+
+          <!-- Stoffgemische → Stoffe (hoch) -->
+          <line x1="350" y1="725" x2="350" y2="675" marker-end="url(#mm-arrow-up)"/>
+
+          <!-- Stoffe → Reinstoffe (hoch) -->
+          <line x1="350" y1="615" x2="350" y2="565" marker-end="url(#mm-arrow-up)"/>
+
+          <!-- Reinstoffe → Hilfstexte links + rechts (hoch nach außen) -->
+          <line x1="350" y1="500" x2="270" y2="450" marker-end="url(#mm-arrow-up)"/>
+          <line x1="350" y1="500" x2="475" y2="450" marker-end="url(#mm-arrow-up)"/>
+
+          <!-- Hilfstext-LINKS → Verbindungen (gerade hoch) -->
+          <line x1="270" y1="395" x2="270" y2="345" marker-end="url(#mm-arrow-up)"/>
+          <!-- Hilfstext-RECHTS → Elemente (gerade hoch) -->
+          <line x1="475" y1="395" x2="475" y2="345" marker-end="url(#mm-arrow-up)"/>
+
+          <!-- Verbindungen → Salze + mol.Verb (hoch nach außen) -->
+          <line x1="270" y1="285" x2="190" y2="220" marker-end="url(#mm-arrow-up)"/>
+          <line x1="270" y1="285" x2="440" y2="220" marker-end="url(#mm-arrow-up)"/>
+
+          <!-- Elemente → mol.Verb (links hoch) + Atome (rechts hoch) -->
+          <line x1="475" y1="285" x2="440" y2="220" marker-end="url(#mm-arrow-up)"/>
+          <line x1="475" y1="285" x2="615" y2="100" marker-end="url(#mm-arrow-up)"/>
+
+          <!-- Salze → Ionen (hoch) -->
+          <line x1="190" y1="160" x2="190" y2="100" marker-end="url(#mm-arrow-up)"/>
+          <!-- mol.Verb → Moleküle (hoch) -->
+          <line x1="440" y1="160" x2="440" y2="100" marker-end="url(#mm-arrow-up)"/>
+        </g>
+      </svg>
+
+      <!-- Drop-Boxen (HTML-Layer, prozentual über dem SVG positioniert) -->
+      <!-- TOP-Reihe (y=60): Ionen, Moleküle, Atome -->
+      <div class="mm-box" data-slot="ionen"   style="left:18%;  top:3%;   width:18%; height:5%;"></div>
+      <div class="mm-box" data-slot="molekuele" style="left:54%; top:3%;   width:18%; height:5%;"></div>
+      <div class="mm-box" data-slot="atome"   style="left:80%;  top:3%;   width:15%; height:5%;"></div>
+
+      <!-- R2 (y=190): Salze, mol.Verbindungen -->
+      <div class="mm-box" data-slot="salze"   style="left:18%;  top:15%;  width:18%; height:5%;"></div>
+      <div class="mm-box" data-slot="molverb" style="left:51%;  top:15%;  width:24%; height:7%;"></div>
+
+      <!-- R3 (y=315): Verbindungen, Elemente -->
+      <div class="mm-box" data-slot="verbindungen" style="left:28%; top:30%; width:20%; height:5%;"></div>
+      <div class="mm-box" data-slot="elemente"     style="left:60%; top:30%; width:18%; height:5%;"></div>
+
+      <!-- HILFSTEXTE (auch als Boxen, aber nicht ziehbar) -->
+      <div class="mm-helper" style="left:25%; top:38%; width:25%;">bestehen aus mehreren<br>Atomarten</div>
+      <div class="mm-helper" style="left:55%; top:38%; width:25%;">bestehen aus einer<br>Atomart</div>
+
+      <!-- Reinstoffe (y=540) -->
+      <div class="mm-box" data-slot="reinstoffe" style="left:40%; top:51%; width:20%; height:5%;"></div>
+
+      <!-- Stoffe (y=650) -->
+      <div class="mm-box" data-slot="stoffe" style="left:40%; top:61%; width:20%; height:5%;"></div>
+
+      <!-- Stoffgemische (y=755) -->
+      <div class="mm-box" data-slot="stoffgemische" style="left:36%; top:71%; width:28%; height:5%;"></div>
+
+      <!-- Homogen + heterogen (y=900) -->
+      <div class="mm-box" data-slot="homogen"   style="left:24%; top:86%; width:14%; height:5%;"></div>
+      <div class="mm-box" data-slot="heterogen" style="left:62%; top:86%; width:14%; height:5%;"></div>
+    </div>
+
+    <!-- Begriff-Karten (drag source) — 12 Begriffe für 12 Slots -->
+    <div class="mm-quelle" id="mm-quelle">
+      <div class="mm-card" data-begriff="Atome">Atome</div>
+      <div class="mm-card" data-begriff="Moleküle">Moleküle</div>
+      <div class="mm-card" data-begriff="Ionen">Ionen</div>
+      <div class="mm-card" data-begriff="Salze">Salze</div>
+      <div class="mm-card" data-begriff="molekulare Verbindungen">molekulare Verbindungen</div>
+      <div class="mm-card" data-begriff="Verbindungen">Verbindungen</div>
+      <div class="mm-card" data-begriff="Elemente">Elemente</div>
+      <div class="mm-card" data-begriff="Reinstoffe">Reinstoffe</div>
+      <div class="mm-card" data-begriff="Stoffe">Stoffe</div>
+      <div class="mm-card" data-begriff="Stoffgemische">Stoffgemische</div>
+      <div class="mm-card" data-begriff="homogen">homogen</div>
+      <div class="mm-card" data-begriff="heterogen">heterogen</div>
+    </div>
+
+    <p class="lead" style="font-style:italic; color:#666; font-size:13px; margin-top:8px;">Hinweis: In dieser Aufgabe gibt es keine automatische Korrektur — wir besprechen die Lösung in der Klasse.</p>
+
+    <div class="aufgabe-fertig-row">
+      <button class="workflow-btn" data-workflow="fertig" data-aufgabe="3">✓ Aufgabe fertig</button>
+    </div>
+  </div>
+
+  <div class="merke-box" id="merke-final" hidden>
+    <div class="label">Merke</div>
+    Ein Atom besteht aus einem winzigen, massereichen <strong>Atomkern</strong> (Protonen + Neutronen) und einer fast leeren, viel größeren <strong>Atomhülle</strong> (Elektronen). — Aus Atomen entstehen zwei Arten von Verbindungen: <strong>Ionenverbindungen</strong> (z. B. Salze) bestehen aus geladenen Teilchen — den <strong>Ionen</strong>. <strong>Molekulare Verbindungen</strong> (z. B. Zucker) bestehen aus ungeladenen <strong>Molekülen</strong>. Nur Ionen können in Lösung den elektrischen Strom transportieren.
+  </div>
+
+  <div class="quiz-panel" id="quiz-panel" hidden>
+    <div class="quiz-header">
+      <span>📚 Grundwissen-Quiz</span>
+      <span class="quiz-counter" id="quiz-counter"></span>
+    </div>
+    <div class="quiz-frage" id="quiz-frage"></div>
+    <div class="quiz-antworten" id="quiz-antworten"></div>
+    <div class="quiz-feedback" id="quiz-feedback" hidden></div>
+    <div class="quiz-controls">
+      <button class="workflow-btn" id="btn-naechste-frage" hidden>Nächste Frage →</button>
+      <button class="workflow-btn verbesserung" id="btn-verbesserung">↩ Verbesserung</button>
+    </div>
+  </div>
+
+  <div class="naechste-panel" id="naechste-panel" hidden>
+    <p>Verbessere deine Antwort oben, dann geht es weiter.</p>
+    <button class="workflow-btn naechste" id="btn-naechste-aufgabe">Nächste Aufgabe →</button>
+  </div>
+
+</div>
+
+<div class="footer-bar">
+  <button class="footer-btn secondary" id="btn-clear-all">🗑 Alle Notizen löschen</button>
+  <button class="footer-btn" id="btn-export-pdf">📄 Als PDF exportieren</button>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <div id="overlay-text">PDF wird erstellt …</div>
+</div>
+
+<!-- Verstecktes Canvas für PDF-Snapshot der Mindmap.
+     Wird vor dem Export in zeichneMindmapZuCanvas() gefüllt. -->
+<canvas id="mindmap-pdf-canvas" width="700" height="1000" style="position:absolute; left:-9999px; top:0;"></canvas>
+
+<script>
+/* ============================================================
+   SIM 1 — Streuversuch DUAL: Erwartung vs. Realität
+   Aufbau wie im Buch: kreisrunder Schirm um die Goldfolie
+   ============================================================ */
+const dualSim = (() => {
+  const cE = document.getElementById('sim-erwartung');
+  const cR = document.getElementById('sim-realitaet');
+  if (!cE || !cR) return { play(){}, reset(){} };
+  const ctxE = cE.getContext('2d');
+  const ctxR = cR.getContext('2d');
+  const W = cE.width, H = cE.height;
+
+  const center = { x: W * 0.55, y: H * 0.5 };
+  const ringR = Math.min(W, H) * 0.35;
+  const folieR = 8;
+  const blendeX = center.x - ringR - 25;
+  const quelleX = 20;
+
+  // Deterministisches Pseudo-Zufalls (seed-basiert), damit Wiederholung gleich aussieht
+  function seed(n) { return ((Math.sin(n * 12.9898) * 43758.5453) % 1 + 1) % 1; }
+
+  // Ein einzelner Strahl: alle Teilchen kommen exakt aus derselben Quellposition.
+  // N Teilchen werden zeitlich gestaffelt abgefeuert.
+  function machePartikel(modus) {
+    const partikel = [];
+    const N = 30;
+    for (let i = 0; i < N; i++) {
+      // alle Teilchen starten mit yOff = 0 (gleiche Quelle, nur ein Strahl)
+      const tStart = i / N * 0.55; // gestaffelter Start zwischen t=0 und t=0.55
+      let typ, winkel;
+      if (modus === 'erwartung') {
+        // Bei Thomson-Erwartung: alle exakt gerade
+        typ = 'gerade';
+        winkel = 0;
+      } else {
+        // Bei Rutherford-Realität: realistische Streuverteilung
+        // ~85% gerade, ~12% leicht abgelenkt, ~2% stark abgelenkt, ~1% Rückprall
+        const r = seed(i + 1);
+        if (r < 0.85) {
+          typ = 'gerade';
+          // ganz minimale Streuung um Strahl herum (±0.04 rad), für Realismus
+          winkel = (seed(i + 100) - 0.5) * 0.08;
+        } else if (r < 0.97) {
+          typ = 'leicht';
+          // leichte Ablenkung 0.15..0.5 rad, Vorzeichen zufällig
+          winkel = (seed(i + 200) > 0.5 ? 1 : -1) * (0.15 + seed(i + 300) * 0.35);
+        } else if (r < 0.995) {
+          typ = 'stark';
+          // starke Ablenkung 0.8..1.6 rad
+          winkel = (seed(i + 400) > 0.5 ? 1 : -1) * (0.8 + seed(i + 500) * 0.8);
+        } else {
+          typ = 'rueck';
+          // Rückprall: Winkel nahe ±π
+          winkel = (seed(i + 600) > 0.5 ? 1 : -1) * (Math.PI - 0.3 - seed(i + 700) * 0.4);
+        }
+      }
+      partikel.push({ tStart, typ, winkel });
+    }
+    return partikel;
+  }
+  const partikelE = machePartikel('erwartung');
+  const partikelR = machePartikel('realitaet');
+
+  const state = { t: 0, playing: false, lastFrameTs: 0 };
+
+  function zeichneAufbau(ctx) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#FAFAFA';
+    ctx.fillRect(0, 0, W, H);
+
+    // Ringförmiger Schirm
+    ctx.save();
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, ringR, Math.PI - 0.18, Math.PI + 0.18, true);
+    ctx.stroke();
+    ctx.restore();
+    // Schirm-Beschriftung
+    ctx.fillStyle = '#666';
+    ctx.font = '11px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Leuchtschirm', center.x, center.y - ringR - 18);
+
+    // α-Quelle (Bleiblock)
+    ctx.fillStyle = '#999';
+    ctx.fillRect(quelleX, center.y - 22, 26, 44);
+    ctx.fillStyle = '#444';
+    ctx.font = 'bold 10px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('α-Quelle', quelleX + 13, center.y + 38);
+
+    // Blende
+    ctx.fillStyle = '#666';
+    ctx.fillRect(blendeX - 2, center.y - 14, 4, 8);
+    ctx.fillRect(blendeX - 2, center.y + 6, 4, 8);
+
+    // Goldfolie in der Mitte
+    ctx.fillStyle = '#FFC107';
+    ctx.fillRect(center.x - folieR/2, center.y - 14, folieR, 28);
+    ctx.strokeStyle = '#B8860B';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(center.x - folieR/2, center.y - 14, folieR, 28);
+    ctx.fillStyle = '#666';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('Goldfolie', center.x + 8, center.y + 32);
+  }
+
+  function zeichneAtomeErwartung(ctx) {
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = '#FF8A80';
+    for (let r = 4; r < 18; r += 3) {
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function zeichneAtomeRealitaet(ctx) {
+    ctx.save();
+    ctx.fillStyle = '#C62828';
+    const kerne = [
+      { x: center.x - 2, y: center.y - 9 },
+      { x: center.x + 1, y: center.y - 3 },
+      { x: center.x - 1, y: center.y + 2 },
+      { x: center.x + 2, y: center.y + 8 }
+    ];
+    kerne.forEach(k => {
+      ctx.beginPath();
+      ctx.arc(k.x, k.y, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function zeichneAlphaTeilchen(ctx, partikel, t) {
+    const startX = quelleX + 26;
+    const startY = center.y; // alle Teilchen aus derselben Quelle
+    const FLUG_DAUER = 0.45; // wie lange braucht ein Teilchen für seine Reise
+
+    partikel.forEach((p, idx) => {
+      // Lokale Zeit dieses Teilchens (0..1 für seine eigene Flugbahn)
+      const localT = (t - p.tStart) / FLUG_DAUER;
+      if (localT <= 0) return; // noch nicht gestartet
+      const lt = Math.min(1, localT);
+
+      // Hin-Phase: Quelle → Mittelpunkt der Folie
+      const tHin = Math.min(lt / 0.45, 1);
+      const xHin = startX + (center.x - startX) * tHin;
+      const yHin = startY;
+
+      // Raus-Phase: ab Folienmitte gemäß Streuwinkel
+      let xEnd = xHin, yEnd = yHin;
+      if (lt > 0.45) {
+        const tRaus = (lt - 0.45) / 0.55;
+        const dx = Math.cos(p.winkel) * (ringR + 4);
+        const dy = Math.sin(p.winkel) * (ringR + 4);
+        xEnd = center.x + dx * tRaus;
+        yEnd = center.y + dy * tRaus;
+      }
+
+      // Spur — sehr dezent, damit das Bild nicht zu wuselig wird
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.strokeStyle = '#0091C7';
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(xHin, yHin);
+      if (lt > 0.45) {
+        ctx.lineTo(xEnd, yEnd);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // Teilchen selbst — nur solange noch in Bewegung
+      if (lt < 1) {
+        ctx.fillStyle = '#0091C7';
+        ctx.beginPath();
+        ctx.arc(xEnd, yEnd, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // Treffer-Glow auf Schirm/Endposition
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 235, 59, 0.75)';
+        ctx.beginPath();
+        ctx.arc(xEnd, yEnd, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255, 235, 59, 0.25)';
+        ctx.beginPath();
+        ctx.arc(xEnd, yEnd, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    });
+  }
+
+  function zeichneE() {
+    zeichneAufbau(ctxE);
+    zeichneAlphaTeilchen(ctxE, partikelE, state.t);
+  }
+  function zeichneR() {
+    zeichneAufbau(ctxR);
+    zeichneAlphaTeilchen(ctxR, partikelR, state.t);
+  }
+  function draw() { zeichneE(); zeichneR(); }
+
+  const PLAY_DURATION = 6500;
+  function tick(now) {
+    if (!state.playing) return;
+    const dt = (now - state.lastFrameTs) / PLAY_DURATION;
+    state.lastFrameTs = now;
+    state.t = Math.min(1, state.t + dt);
+    draw();
+    if (state.t < 1) requestAnimationFrame(tick);
+    else state.playing = false;
+  }
+  function play() {
+    if (state.t >= 1) state.t = 0;
+    state.playing = true;
+    state.lastFrameTs = performance.now();
+    requestAnimationFrame(tick);
+  }
+  function reset() { state.t = 0; state.playing = false; draw(); }
+  draw();
+  return { play, reset };
+})();
+
+/* ============================================================
+   SIM 2 — Kern-Hülle mit Vergrößerung
+   ============================================================ */
+const kernhuelleSim = (() => {
+  const c = document.getElementById('sim-kernhuelle');
+  if (!c) return { reset(){} };
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  const scrub = document.getElementById('scrub-kern');
+  const state = { t: 0 };
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#FAFAFA';
+    ctx.fillRect(0, 0, W, H);
+
+    const cx = W / 2, cy = H / 2;
+    const huelleR = Math.min(W, H) * 0.42;
+    
+    // Atomhülle
+    ctx.save();
+    ctx.strokeStyle = '#0091C7';
+    ctx.fillStyle = 'rgba(0, 145, 199, 0.05)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, huelleR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // Elektronen
+    const eN = 6;
+    for (let i = 0; i < eN; i++) {
+      const a = (i / eN) * Math.PI * 2 + 0.4;
+      const ex = cx + Math.cos(a) * huelleR;
+      const ey = cy + Math.sin(a) * huelleR;
+      ctx.fillStyle = '#0091C7';
+      ctx.beginPath();
+      ctx.arc(ex, ey, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FFF';
+      ctx.font = 'bold 10px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('−', ex, ey);
+    }
+
+    // Atomkern
+    const kernR = 0.3 + state.t * 40;
+    ctx.fillStyle = '#C62828';
+    ctx.beginPath();
+    ctx.arc(cx, cy, kernR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Beschriftungen
+    ctx.fillStyle = '#1A3A5C';
+    ctx.font = 'bold 13px Arial';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Atomhülle', cx + huelleR + 8, cy - huelleR + 4);
+    ctx.font = '11px Arial';
+    ctx.fillStyle = '#666';
+    ctx.fillText('(fast leerer Raum,', cx + huelleR + 8, cy - huelleR + 22);
+    ctx.fillText('Elektronen bewegen', cx + huelleR + 8, cy - huelleR + 36);
+    ctx.fillText('sich darin)', cx + huelleR + 8, cy - huelleR + 50);
+
+    if (state.t > 0.05) {
+      ctx.fillStyle = '#C62828';
+      ctx.font = 'bold 13px Arial';
+      ctx.fillText('Atomkern', cx + kernR + 12, cy - 8);
+      ctx.font = '11px Arial';
+      ctx.fillStyle = '#666';
+      ctx.fillText('(Protonen + Neutronen)', cx + kernR + 12, cy + 8);
+    }
+
+    ctx.fillStyle = '#666';
+    ctx.font = '11px Arial';
+    ctx.textAlign = 'center';
+    if (state.t < 0.1) {
+      ctx.fillText('Wirkliches Größenverhältnis: Der Kern ist hier kaum zu sehen — ein winziger Punkt.', W/2, H - 18);
+    } else if (state.t < 0.6) {
+      ctx.fillText('Der Atomkern ist nur ein winziger Bruchteil des Atoms — die Hülle ist 100 000-mal größer.', W/2, H - 18);
+    } else {
+      ctx.fillText('So groß wäre der Kern, wenn man ihn übertrieben groß zeichnet — in Wirklichkeit viel kleiner!', W/2, H - 18);
+    }
+  }
+
+  if (scrub) {
+    scrub.addEventListener('input', () => {
+      state.t = parseInt(scrub.value, 10) / 1000;
+      draw();
+    });
+  }
+  draw();
+  return { reset() { state.t = 0; if (scrub) scrub.value = 0; draw(); } };
+})();
+
+/* ============================================================
+   SIM 3 — Salz vs. Zucker im Wasser (Teilchenmodell)
+   ============================================================ */
+const loesenSim = (() => {
+  const c = document.getElementById('sim-loesen');
+  if (!c) return { salz(){}, zucker(){}, reset(){} };
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  let modus = 'leer';
+  let teilchenliste = [];
+  let animTime = 0;
+  let rafId = null;
+  let lastTs = 0;
+
+  const becher = {
+    cx: W * 0.5, cy: H * 0.5 + 20,
+    bw: W * 0.7, bh: H * 0.6,
+  };
+
+  function macheSalzGitter() {
+    const groesse = 6, abstand = 14;
+    const startX = becher.cx - (groesse - 1) * abstand / 2;
+    const startY = becher.cy - (groesse - 1) * abstand / 2;
+    const ionen = [];
+    for (let i = 0; i < groesse; i++) {
+      for (let j = 0; j < groesse; j++) {
+        ionen.push({
+          x: startX + j * abstand,
+          y: startY + i * abstand,
+          ladung: ((i + j) % 2 === 0) ? +1 : -1,
+          frei: false,
+          vx: 0, vy: 0
+        });
+      }
+    }
+    return ionen;
+  }
+
+  function macheZuckerGitter() {
+    const groesse = 4, abstand = 22;
+    const startX = becher.cx - (groesse - 1) * abstand / 2;
+    const startY = becher.cy - (groesse - 1) * abstand / 2;
+    const molekuele = [];
+    for (let i = 0; i < groesse; i++) {
+      for (let j = 0; j < groesse; j++) {
+        molekuele.push({
+          x: startX + j * abstand,
+          y: startY + i * abstand,
+          frei: false,
+          vx: 0, vy: 0
+        });
+      }
+    }
+    return molekuele;
+  }
+
+  function zeichneBecher() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    // Wasser
+    ctx.fillStyle = 'rgba(173, 216, 230, 0.35)';
+    ctx.fillRect(becher.cx - becher.bw/2, becher.cy - becher.bh/2, becher.bw, becher.bh);
+    // Glas
+    ctx.strokeStyle = '#1A3A5C';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(becher.cx - becher.bw/2 - 6, becher.cy - becher.bh/2 - 8);
+    ctx.lineTo(becher.cx - becher.bw/2, becher.cy - becher.bh/2);
+    ctx.lineTo(becher.cx - becher.bw/2, becher.cy + becher.bh/2);
+    ctx.lineTo(becher.cx + becher.bw/2, becher.cy + becher.bh/2);
+    ctx.lineTo(becher.cx + becher.bw/2, becher.cy - becher.bh/2);
+    ctx.lineTo(becher.cx + becher.bw/2 + 6, becher.cy - becher.bh/2 - 8);
+    ctx.stroke();
+    // Wasseroberfläche, leicht wellig
+    ctx.beginPath();
+    ctx.moveTo(becher.cx - becher.bw/2, becher.cy - becher.bh/2);
+    for (let x = -becher.bw/2; x <= becher.bw/2; x += 4) {
+      const wave = Math.sin(animTime * 0.001 + x * 0.05) * 1.2;
+      ctx.lineTo(becher.cx + x, becher.cy - becher.bh/2 + wave);
+    }
+    ctx.lineTo(becher.cx + becher.bw/2, becher.cy - becher.bh/2);
+    ctx.strokeStyle = '#0091C7';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = '#666';
+    ctx.font = '11px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('Wasser', becher.cx - becher.bw/2 + 6, becher.cy - becher.bh/2 + 14);
+  }
+
+  function zeichneIon(ion) {
+    const r = 8;
+    ctx.save();
+    if (ion.ladung === +1) {
+      ctx.fillStyle = '#C62828';
+    } else {
+      ctx.fillStyle = '#0091C7';
+    }
+    ctx.beginPath();
+    ctx.arc(ion.x, ion.y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#FFF';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ion.ladung === +1 ? '+' : '−', ion.x, ion.y);
+    ctx.restore();
+  }
+
+  function zeichneMolekuel(m) {
+    ctx.save();
+    const atome = [
+      { dx: 0, dy: 0, color: '#666' },
+      { dx: -7, dy: 4, color: '#999' },
+      { dx: 7, dy: 4, color: '#999' }
+    ];
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(m.x + atome[0].dx, m.y + atome[0].dy);
+    ctx.lineTo(m.x + atome[1].dx, m.y + atome[1].dy);
+    ctx.moveTo(m.x + atome[0].dx, m.y + atome[0].dy);
+    ctx.lineTo(m.x + atome[2].dx, m.y + atome[2].dy);
+    ctx.stroke();
+    atome.forEach(a => {
+      ctx.fillStyle = a.color;
+      ctx.beginPath();
+      ctx.arc(m.x + a.dx, m.y + a.dy, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function tick(ts) {
+    if (lastTs === 0) lastTs = ts;
+    const dt = ts - lastTs;
+    lastTs = ts;
+    animTime += dt;
+
+    zeichneBecher();
+
+    teilchenliste.forEach((t, idx) => {
+      const ausloesungsZeit = idx * (modus === 'salz' ? 80 : 100);
+      if (animTime > ausloesungsZeit && !t.frei) {
+        t.frei = true;
+        const winkel = Math.random() * Math.PI * 2;
+        const tempo = modus === 'salz' ? 0.5 : 0.4;
+        t.vx = Math.cos(winkel) * tempo;
+        t.vy = Math.sin(winkel) * tempo;
+      }
+      if (t.frei) {
+        if (Math.random() < 0.04) {
+          const winkel = Math.random() * Math.PI * 2;
+          const tempo = modus === 'salz' ? 0.5 : 0.4;
+          t.vx = Math.cos(winkel) * tempo;
+          t.vy = Math.sin(winkel) * tempo;
+        }
+        t.x += t.vx * (dt / 16);
+        t.y += t.vy * (dt / 16);
+        // Wandkollision
+        const margin = modus === 'salz' ? 12 : 16;
+        if (t.x < becher.cx - becher.bw/2 + margin) { t.x = becher.cx - becher.bw/2 + margin; t.vx = Math.abs(t.vx); }
+        if (t.x > becher.cx + becher.bw/2 - margin) { t.x = becher.cx + becher.bw/2 - margin; t.vx = -Math.abs(t.vx); }
+        if (t.y < becher.cy - becher.bh/2 + 14) { t.y = becher.cy - becher.bh/2 + 14; t.vy = Math.abs(t.vy); }
+        if (t.y > becher.cy + becher.bh/2 - margin) { t.y = becher.cy + becher.bh/2 - margin; t.vy = -Math.abs(t.vy); }
+      }
+      if (modus === 'salz') zeichneIon(t);
+      else zeichneMolekuel(t);
+    });
+
+    // Beschriftung oben
+    if (modus === 'salz') {
+      ctx.fillStyle = '#1A3A5C';
+      ctx.font = 'bold 13px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Salz löst sich → freie Ionen (Na⁺ und Cl⁻)', W/2, 24);
+      ctx.font = '11px Arial';
+      ctx.fillStyle = '#666';
+      ctx.fillText('Die Ionen bewegen sich frei und können Strom transportieren.', W/2, 42);
+    } else if (modus === 'zucker') {
+      ctx.fillStyle = '#1A3A5C';
+      ctx.font = 'bold 13px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Zucker löst sich → ungeladene Moleküle', W/2, 24);
+      ctx.font = '11px Arial';
+      ctx.fillStyle = '#666';
+      ctx.fillText('Keine geladenen Teilchen — der Strom kann nicht fließen.', W/2, 42);
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function start(neuerModus) {
+    modus = neuerModus;
+    animTime = 0;
+    lastTs = 0;
+    teilchenliste = (modus === 'salz') ? macheSalzGitter() : macheZuckerGitter();
+    if (rafId !== null) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tick);
+  }
+  function reset() {
+    modus = 'leer';
+    teilchenliste = [];
+    if (rafId !== null) cancelAnimationFrame(rafId);
+    rafId = null;
+    animTime = 0;
+    zeichneBecher();
+    ctx.fillStyle = '#999';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Wähle einen Stoff: Salz oder Zucker', W/2, becher.cy);
+  }
+
+  reset();
+  return {
+    salz() { start('salz'); },
+    zucker() { start('zucker'); },
+    reset
+  };
+})();
+
+/* ============================================================
+   ACTION-HANDLER für die Sim-Buttons
+   ============================================================ */
+document.querySelectorAll('[data-action]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const a = btn.dataset.action;
+    if (a === 'dual-start') dualSim.play();
+    if (a === 'dual-reset') dualSim.reset();
+    if (a === 'loesen-salz') loesenSim.salz();
+    if (a === 'loesen-zucker') loesenSim.zucker();
+    if (a === 'loesen-reset') loesenSim.reset();
+  });
+});
+
+/* ============================================================
+   ENGINE INITIALISIEREN
+   ============================================================ */
+ABEngine.init({
+  modulKey: 'ab.atom-zur-verbindung.v3',
+  aufgabenAnzahl: 3,
+  quizPool: window.GRUNDWISSEN_POOL
+});
+
+/* ============================================================
+   PDF-EXPORT
+   ============================================================ */
+document.getElementById('btn-export-pdf').addEventListener('click', () => {
+  const sl = document.getElementById('scrub-kern');
+  if (sl) { sl.value = 600; sl.dispatchEvent(new Event('input')); }
+
+  // Mindmap ins versteckte Canvas zeichnen, damit sie als Bild ins PDF kann
+  if (window.zeichneMindmapZuCanvas) window.zeichneMindmapZuCanvas();
+
+  ABPdf.export({
+    titel: 'Kern-Hülle-Modell und Verbindungsklassen',
+    untertitel: '',
+    klasse: '8c',
+    datum: '7. Mai 2026',
+    dateiname: 'Kern-Huelle-Verbindungsklassen_Klasse_8c.pdf',
+    inhalt: (h) => {
+      h.section('Rutherfords Streuversuch (1909)');
+      h.paragraph('Aufbau: α-Quelle, Blende, Goldfolie, ringförmiger Leuchtschirm.');
+      h.simSnapshotPair(
+        document.getElementById('sim-erwartung'),
+        'Abb. 1 · Erwartung nach Thomson',
+        'Bei gleichmäßig verteilter Ladung: alle α-Teilchen geradeaus durch.',
+        document.getElementById('sim-realitaet'),
+        'Abb. 2 · Tatsächliches Ergebnis',
+        'Die meisten fliegen durch — einige werden stark abgelenkt, wenige fast zurückgeworfen.'
+      );
+
+      h.section('Aufgabe 1 – Das Kern-Hülle-Modell');
+      h.infoBox('Atomkern (winzig, schwer, positiv geladen) + Atomhülle (groß, fast leer, mit Elektronen). Hülle ist 100 000-mal größer als der Kern. Bausteine: Proton (+1, 1u, Kern), Neutron (0, 1u, Kern), Elektron (-1, ≈0,0005u, Hülle).');
+      h.aufgabe(1, 'Skizziere', 'ein Atom nach dem Kern-Hülle-Modell. Beschrifte: Atomkern, Atomhülle, Proton, Neutron, Elektron.');
+      h.canvasFeld('r2a');
+
+      h.section('Aufgabe 2 – Was passiert auf Teilchen-Ebene?');
+      h.paragraph('Versuch: Salz in Wasser, Zucker in Wasser, reines destilliertes Wasser. Beobachtung: Lampe leuchtet nur bei Salzlösung.');
+      h.infoBox('In der Salzlösung gibt es Ionen (geladene Teilchen). In der Zuckerlösung sind die Teilchen Moleküle (Verbünde aus mehreren Atomen, ungeladen).');
+      h.simSnapshot(document.getElementById('sim-loesen'),
+                    'Abb. 3 · Salz vs. Zucker im Wasser',
+                    'Salz zerfällt in Ionen, Zucker bleibt als Moleküle.');
+      h.aufgabe(2, 'Beschreibe und erkläre', 'mithilfe der Animation, warum Salzwasser den Strom leitet — Zuckerwasser aber nicht.');
+      h.canvasFeld('r4a');
+
+      // Aufgabe 3: auf eigener Seite, damit Mindmap am Stück bleibt
+      h.pageBreak();
+      h.section('Aufgabe 3 – Stoffe einordnen');
+      h.paragraph('Ordne die Begriffe in die Mindmap ein. Die Lösung wird gemeinsam in der Klasse besprochen.');
+      h.mindmapImage(document.getElementById('mindmap-pdf-canvas'));
+    }
+  });
+});
+
+
+/* ============================================================
+   MINDMAP — Drag-and-Drop (freie Zuordnung, keine Validierung)
+   ============================================================ */
+(function() {
+  let dragKarte = null;
+  let offsetX = 0, offsetY = 0;
+  let originalParent = null;
+  let originalNextSibling = null;
+  let originalBox = null; // wenn aus einer mm-box gezogen wurde
+  // Speichert den ursprünglichen Begriff für jede besetzte Box, um beim
+  // Zurückholen die Karte wieder herstellen zu können
+  function init() {
+    // Drag aus der Quelle (alle Karten)
+    document.querySelectorAll('.mm-card').forEach(card => {
+      card.addEventListener('pointerdown', startDragKarte);
+    });
+    // Drag aus einer schon befüllten Box (Begriff wieder rausziehen)
+    document.querySelectorAll('.mm-box').forEach(box => {
+      box.addEventListener('pointerdown', startDragBox);
+    });
+  }
+
+  function startDragKarte(e) {
+    e.preventDefault();
+    const karte = e.currentTarget;
+    beginnDrag(karte, e, /* aus Box */ null);
+  }
+
+  function startDragBox(e) {
+    const box = e.currentTarget;
+    if (!box.classList.contains('gefuellt')) return;
+    e.preventDefault();
+    // Eine schwebende Karte aus der Box bauen
+    const begriff = box.textContent;
+    const karte = document.createElement('div');
+    karte.className = 'mm-card';
+    karte.dataset.begriff = begriff;
+    karte.textContent = begriff;
+    document.body.appendChild(karte);
+    // Box leeren
+    box.textContent = '';
+    box.classList.remove('gefuellt');
+    speichereStand();
+    beginnDrag(karte, e, /* aus Box */ box);
+  }
+
+  function beginnDrag(karte, e, aus) {
+    dragKarte = karte;
+    originalBox = aus;
+    const rect = karte.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
+    if (!aus) {
+      originalParent = karte.parentNode;
+      originalNextSibling = karte.nextSibling;
+    }
+
+    karte.classList.add('dragging');
+    karte.style.left = rect.left + 'px';
+    karte.style.top = rect.top + 'px';
+    karte.style.width = rect.width + 'px';
+    document.body.appendChild(karte);
+
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
+  }
+
+  function onMove(e) {
+    if (!dragKarte) return;
+    e.preventDefault();
+    dragKarte.style.left = (e.clientX - offsetX) + 'px';
+    dragKarte.style.top = (e.clientY - offsetY) + 'px';
+
+    const target = boxUnterPunkt(e.clientX, e.clientY);
+    document.querySelectorAll('.mm-box[data-slot].hover').forEach(b => b.classList.remove('hover'));
+    if (target) {
+      target.classList.add('hover');
+    }
+  }
+
+  function onUp(e) {
+    if (!dragKarte) return;
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
+
+    const target = boxUnterPunkt(e.clientX, e.clientY);
+    document.querySelectorAll('.mm-box[data-slot].hover').forEach(b => b.classList.remove('hover'));
+
+    if (target) {
+      // Wenn die Zielbox schon befüllt ist: alten Begriff zurück zur Quelle
+      if (target.classList.contains('gefuellt')) {
+        const alterBegriff = target.textContent;
+        const neueKarte = document.createElement('div');
+        neueKarte.className = 'mm-card';
+        neueKarte.dataset.begriff = alterBegriff;
+        neueKarte.textContent = alterBegriff;
+        neueKarte.addEventListener('pointerdown', startDragKarte);
+        const quelle = document.getElementById('mm-quelle');
+        if (quelle) quelle.appendChild(neueKarte);
+      }
+      // Neue Karte platzieren
+      target.textContent = dragKarte.dataset.begriff;
+      target.classList.add('gefuellt');
+      dragKarte.remove();
+      dragKarte = null;
+      originalBox = null;
+      speichereStand();
+      return;
+    }
+
+    // Außerhalb gedroppt → zurück zum Ursprung
+    karteZurueck(dragKarte);
+    dragKarte = null;
+    originalBox = null;
+  }
+
+  function karteZurueck(karte) {
+    if (originalBox) {
+      // Karte kam aus einer Box — wieder dort einsetzen
+      originalBox.textContent = karte.dataset.begriff;
+      originalBox.classList.add('gefuellt');
+      karte.remove();
+      speichereStand();
+      return;
+    }
+    karte.classList.remove('dragging');
+    karte.style.left = '';
+    karte.style.top = '';
+    karte.style.width = '';
+    if (originalNextSibling && originalParent.contains(originalNextSibling)) {
+      originalParent.insertBefore(karte, originalNextSibling);
+    } else {
+      originalParent.appendChild(karte);
+    }
+  }
+
+  function boxUnterPunkt(x, y) {
+    const boxen = document.querySelectorAll('.mm-box[data-slot]');
+    for (const b of boxen) {
+      const r = b.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        return b;
+      }
+    }
+    return null;
+  }
+
+  function speichereStand() {
+    try {
+      const gefuellt = {};
+      document.querySelectorAll('.mm-box[data-slot].gefuellt').forEach(b => {
+        gefuellt[b.dataset.slot] = b.textContent;
+      });
+      // Welche Karten sind noch in der Quelle?
+      const inQuelle = [];
+      document.querySelectorAll('.mm-quelle .mm-card').forEach(c => {
+        inQuelle.push(c.dataset.begriff);
+      });
+      if (window.ABEngine && window.ABEngine.getWorkflowState) {
+        const wf = window.ABEngine.getWorkflowState();
+        if (wf) {
+          wf.mindmap = { boxen: gefuellt, quelle: inQuelle };
+          if (window.ABEngine.flush) window.ABEngine.flush();
+        }
+      }
+    } catch (e) { console.warn(e); }
+  }
+
+  function ladeStand() {
+    try {
+      if (!window.ABEngine || !window.ABEngine.getWorkflowState) return;
+      const wf = window.ABEngine.getWorkflowState();
+      if (!wf || !wf.mindmap) return;
+      const boxen = wf.mindmap.boxen || wf.mindmap; // backward compat
+      const quelle = wf.mindmap.quelle;
+      Object.entries(boxen).forEach(([slot, begriff]) => {
+        const box = document.querySelector('.mm-box[data-slot][data-slot="' + slot + '"]');
+        if (!box) return;
+        box.textContent = begriff;
+        box.classList.add('gefuellt');
+      });
+      // Wenn quelle gespeichert: nicht-vorkommende Karten aus Quelle entfernen
+      if (Array.isArray(quelle)) {
+        const verwendet = {};
+        quelle.forEach(b => { verwendet[b] = (verwendet[b] || 0) + 1; });
+        document.querySelectorAll('.mm-quelle .mm-card').forEach(card => {
+          const b = card.dataset.begriff;
+          if (verwendet[b] && verwendet[b] > 0) {
+            verwendet[b]--;
+          } else {
+            card.remove();
+          }
+        });
+      } else {
+        // Fallback: jede Karte, deren Begriff in einer Box steht, einmal entfernen
+        Object.values(boxen).forEach(begriff => {
+          const card = document.querySelector('.mm-quelle .mm-card[data-begriff="' + begriff + '"]');
+          if (card) card.remove();
+        });
+      }
+    } catch (e) { console.warn(e); }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => { init(); ladeStand(); }, 100);
+  });
+  if (document.readyState !== 'loading') {
+    setTimeout(() => { init(); ladeStand(); }, 100);
+  }
+})();
+
+/* ============================================================
+   MINDMAP → Canvas (für PDF-Snapshot)
+   Liest die aktuelle Mindmap aus dem DOM und zeichnet sie in
+   ein verstecktes Canvas, damit ABPdf.simSnapshot sie ins PDF
+   einbauen kann. Saubere Vektor-ähnliche Optik.
+   ============================================================ */
+window.zeichneMindmapZuCanvas = function() {
+  const canvas = document.getElementById('mindmap-pdf-canvas');
+  if (!canvas) return;
+  const wrap = document.querySelector('.mindmap-wrap');
+  if (!wrap) return;
+  canvas.width = 700;
+  canvas.height = 1050;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, W, H);
+
+  // Pfeil-Helper: zieht Linie von (x1,y1) zu (x2,y2) und setzt Pfeilspitze am Ende
+  ctx.strokeStyle = '#7E92AB';
+  ctx.fillStyle = '#7E92AB';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+
+  function pfeil(x1, y1, x2, y2) {
+    // Linie
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    // Pfeilspitze am Endpunkt
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 1) return;
+    const ux = dx / len, uy = dy / len;
+    const size = 8;
+    const baseX = x2 - ux * size, baseY = y2 - uy * size;
+    const perpX = -uy * size * 0.5, perpY = ux * size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(baseX + perpX, baseY + perpY);
+    ctx.lineTo(baseX - perpX, baseY - perpY);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Pfeile (alle Linien aus dem SVG - 1:1 übernommen)
+  pfeil(220, 900, 350, 785);
+  pfeil(560, 900, 350, 785);
+  pfeil(350, 725, 350, 675);
+  pfeil(350, 615, 350, 565);
+  pfeil(350, 500, 270, 450);
+  pfeil(350, 500, 475, 450);
+  pfeil(270, 395, 270, 345);
+  pfeil(475, 395, 475, 345);
+  pfeil(270, 285, 190, 220);
+  pfeil(270, 285, 440, 220);
+  pfeil(475, 285, 440, 220);
+  pfeil(475, 285, 615, 100);
+  pfeil(190, 160, 190, 100);
+  pfeil(440, 160, 440, 100);
+
+  // Hilfstext-Boxen
+  function rundeBox(x, y, w, h, r, fill, stroke, lineWidth) {
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = lineWidth || 2;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // Hilfstext-Bereiche (passend zur DOM-Position)
+  const wrapRect = wrap.getBoundingClientRect();
+  document.querySelectorAll('.mm-helper').forEach(h => {
+    const r = h.getBoundingClientRect();
+    const x = (r.left - wrapRect.left) / wrapRect.width * W;
+    const yp = (r.top - wrapRect.top) / wrapRect.height * H;
+    const w = r.width / wrapRect.width * W;
+    const hh = r.height / wrapRect.height * H;
+    rundeBox(x, yp, w, hh, 4, '#F0F2F5', '#C8D0DA', 1);
+    ctx.font = '13px sans-serif';
+    ctx.fillStyle = '#444';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const text = h.innerText.trim();
+    const lines = text.split(/\r?\n/);
+    const lineH = 16;
+    const startY = yp + hh/2 - (lines.length - 1) * lineH / 2;
+    lines.forEach((line, i) => {
+      ctx.fillText(line, x + w/2, startY + i * lineH);
+    });
+  });
+
+  // Drop-Boxen
+  document.querySelectorAll('.mindmap-wrap .mm-box[data-slot]').forEach(box => {
+    const r = box.getBoundingClientRect();
+    const x = (r.left - wrapRect.left) / wrapRect.width * W;
+    const yp = (r.top - wrapRect.top) / wrapRect.height * H;
+    const w = r.width / wrapRect.width * W;
+    const hh = r.height / wrapRect.height * H;
+    const istGefuellt = box.classList.contains('gefuellt');
+    rundeBox(
+      x, yp, w, hh, 6,
+      istGefuellt ? '#FFFFFF' : '#E5EAEF',
+      '#7E92AB',
+      1.5
+    );
+    ctx.font = istGefuellt ? 'bold 14px sans-serif' : '14px sans-serif';
+    ctx.fillStyle = istGefuellt ? '#2D2A26' : '#B8C4D2';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const text = istGefuellt ? box.textContent : '...';
+    if (ctx.measureText(text).width > w - 8 && text.includes(' ')) {
+      const woerter = text.split(' ');
+      const halb = Math.ceil(woerter.length / 2);
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(woerter.slice(0, halb).join(' '), x + w/2, yp + hh/2 - 7);
+      ctx.fillText(woerter.slice(halb).join(' '),  x + w/2, yp + hh/2 + 7);
+    } else {
+      ctx.fillText(text, x + w/2, yp + hh/2);
+    }
+  });
+};
+
+</script>
+
+</body>
+</html>

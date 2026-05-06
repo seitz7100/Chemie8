@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arbeitsblätter – Klasse 8c</title>
+<script src="data.js"></script>
+<style>
+  :root {
+    --cyan: #00B0F0;
+    --cyan-light: #DDF4FC;
+    --cyan-dark: #0091C7;
+    --dark: #1F4E79;
+    --bg: #F5F8FA;
+    --text: #222;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 24px 60px;
+  }
+
+  .breadcrumb { margin-bottom: 24px; }
+  .breadcrumb a {
+    color: var(--cyan-dark);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb .sep { color: #BBB; margin: 0 6px; }
+  .breadcrumb .current { color: #888; font-size: 14px; }
+
+  /* ZURÜCK-PFEIL — eine Ebene zurück (zur 8c-Startseite) */
+  .zurueck-leiste { margin-bottom: 18px; }
+  .zurueck-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--cyan-dark);
+    background: white;
+    border: 1.5px solid var(--cyan);
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background 0.15s;
+  }
+  .zurueck-link:hover { background: var(--cyan-light); }
+  .zurueck-link:active { background: var(--cyan-light); }
+
+  .header {
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 3px solid var(--cyan);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header .icon {
+    font-size: 32px;
+  }
+  .header h1 {
+    color: var(--dark);
+    font-size: 24px;
+    margin: 0;
+    flex: 1;
+  }
+  .header .klasse-badge {
+    background: var(--cyan);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  /* GRUPPIERUNG */
+  .group {
+    margin-bottom: 32px;
+  }
+  .group-title {
+    color: var(--cyan-dark);
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #E0E8EE;
+  }
+
+  /* AB-CARDS */
+  .ab-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .ab-card {
+    background: white;
+    border: 1.5px solid #E0E8EE;
+    border-radius: 10px;
+    padding: 18px 20px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.15s ease;
+  }
+  .ab-card:hover {
+    border-color: var(--cyan);
+    transform: translateX(2px);
+    box-shadow: 0 4px 16px rgba(0,176,240,0.12);
+  }
+  .ab-card:active {
+    background: var(--cyan-light);
+  }
+  .ab-icon {
+    width: 48px; height: 48px;
+    background: var(--cyan-light);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .ab-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .ab-title {
+    color: var(--dark);
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .ab-desc {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .ab-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 12px;
+  }
+  .tag {
+    background: var(--cyan-light);
+    color: var(--cyan-dark);
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-weight: bold;
+  }
+  .tag.date {
+    background: #F0F0F0;
+    color: #666;
+  }
+  .tag.has-notes {
+    background: #FFF4D6;
+    color: #8B6F00;
+  }
+  .tag.completed {
+    background: #D5F4D5;
+    color: #1B5E20;
+  }
+  .ab-arrow {
+    color: var(--cyan);
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+  }
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="zurueck-leiste">
+    <a href="index.html" class="zurueck-link">← Zurück zur Startseite</a>
+  </div>
+
+  <div class="breadcrumb">
+    <a href="../">Klassen</a>
+    <span class="sep">›</span>
+    <a href="index.html">8c</a>
+    <span class="sep">›</span>
+    <span class="current">Arbeitsblätter</span>
+  </div>
+
+  <div class="header">
+    <div class="icon">📄</div>
+    <h1>Arbeitsblätter</h1>
+    <div class="klasse-badge">8c</div>
+  </div>
+
+  <div id="content" class="loading">Lade Arbeitsblätter …</div>
+
+</div>
+
+<script>
+  // Daten aus data.js lesen (statt fetch, damit es im SCORM-Player ohne CORS-Probleme läuft)
+  (function() {
+    try {
+      const data = window.PORTAL_DATA || {};
+      const abs = data.arbeitsblaetter || [];
+      const container = document.getElementById('content');
+
+      if (abs.length === 0) {
+        container.className = 'empty';
+        container.innerHTML = `
+          <div class="empty-icon">📭</div>
+          <div>Noch keine Arbeitsblätter verfügbar.</div>
+        `;
+        return;
+      }
+
+      // Nach Lernbereich gruppieren
+      const groups = {};
+      abs.forEach(ab => {
+        const lb = ab.lernbereich || 'Sonstiges';
+        if (!groups[lb]) groups[lb] = [];
+        groups[lb].push(ab);
+      });
+
+      const sortedKeys = Object.keys(groups).sort();
+
+      container.className = '';
+      container.innerHTML = sortedKeys.map(lb => `
+        <div class="group">
+          <div class="group-title">${escape(lb)} ${groups[lb][0].thema ? '· ' + escape(groups[lb][0].thema) : ''}</div>
+          <div class="ab-list">
+            ${groups[lb].map(ab => renderCard(ab)).join('')}
+          </div>
+        </div>
+      `).join('');
+    } catch(err) {
+      document.getElementById('content').innerHTML =
+        '<div class="empty"><div class="empty-icon">⚠</div><div>Konnte Arbeitsblätter nicht laden.</div></div>';
+      console.error(err);
+    }
+  })();
+
+  function renderCard(ab) {
+    // Prüfen, ob für dieses AB schon Notizen existieren (localStorage)
+    let hasNotes = false;
+    let isCompleted = false;
+    try {
+      const keys = Object.keys(localStorage);
+      const fileBase = ab.datei.split('/').pop().replace('.html', '');
+      hasNotes = keys.some(k =>
+        k.toLowerCase().includes(fileBase.toLowerCase()) ||
+        k.toLowerCase().includes(ab.titel.toLowerCase().split(' ')[0].toLowerCase())
+      );
+      // "abgeschlossen"-Status aus dem Portal-Tracking
+      const fertig = JSON.parse(localStorage.getItem('chemie_portal_fertig') || '{}');
+      if (ab.id && fertig[ab.id]) isCompleted = true;
+    } catch(e) {}
+
+    return `
+      <a href="${escape(ab.datei)}" class="ab-card">
+        <div class="ab-icon">📄</div>
+        <div class="ab-content">
+          <div class="ab-title">${escape(ab.titel)}</div>
+          ${ab.beschreibung ? `<div class="ab-desc">${escape(ab.beschreibung)}</div>` : ''}
+          <div class="ab-meta">
+            ${ab.lernbereich ? `<span class="tag">${escape(ab.lernbereich)}</span>` : ''}
+            ${ab.datum ? `<span class="tag date">${escape(ab.datum)}</span>` : ''}
+            ${isCompleted ? `<span class="tag completed">✓ abgeschlossen</span>` :
+              (hasNotes ? `<span class="tag has-notes">✏ Notizen vorhanden</span>` : '')}
+          </div>
+        </div>
+        <div class="ab-arrow">›</div>
+      </a>
+    `;
+  }
+
+  function escape(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
+  }
+</script>
+
+</body>
+</html>

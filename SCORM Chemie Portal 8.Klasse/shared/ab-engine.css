@@ -1,0 +1,515 @@
+/* ============================================================
+   AB-Engine — Gemeinsame Styles für alle Arbeitsblätter
+   ============================================================
+   Wird in jedem AB via <link rel="stylesheet" href="../../shared/ab-engine.css">
+   eingebunden. AB-spezifisches CSS kann darunter im <style>-Block ergänzt werden.
+*/
+
+:root {
+  --cyan: #00B0F0;
+  --cyan-dark: #0080B0;
+  --cyan-light: #C5DDF6;
+  --dark: #1A3A5C;
+  --text: #2D2A26;
+  --text-muted: #666;
+  --grey-line: #D8D8D8;
+  --grey-light: #F4F4F4;
+  --heft: #B5C7D8;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html, body {
+  margin: 0; padding: 0;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: var(--text);
+  background: #FAFAFA;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+body.pen-aktiv, body.pen-aktiv * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+.ab-container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 16px 20px 100px 20px;
+}
+
+.ab-zurueck-leiste {
+  margin-bottom: 8px;
+}
+.ab-zurueck-link {
+  color: var(--cyan-dark);
+  text-decoration: none;
+  font-size: 14px;
+  display: inline-block;
+  padding: 4px 0;
+}
+
+.ab-header {
+  border-bottom: 2px solid var(--cyan);
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+}
+.ab-header h1 {
+  font-size: 24px;
+  margin: 0 0 4px 0;
+  color: var(--dark);
+}
+.ab-header .meta {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+h2.section {
+  font-size: 17px;
+  color: var(--dark);
+  margin: 22px 0 10px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--grey-line);
+}
+
+p.lead {
+  margin: 8px 0 12px 0;
+  line-height: 1.55;
+}
+
+/* INFO-BOX */
+.info-box {
+  background: #FFF8E1;
+  border: 1.5px solid #F0B400;
+  border-left: 6px solid #F0B400;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 12px 0 18px 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* MERKE */
+.merke-box {
+  background: white;
+  border: 1.5px solid var(--cyan);
+  border-left: 6px solid var(--cyan);
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 24px 0;
+}
+.merke-box .label {
+  color: var(--cyan-dark);
+  font-weight: bold;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+/* AUFGABE */
+.aufgabe { margin: 12px 0; }
+.aufgabe-text {
+  margin: 6px 0 10px 24px;
+  line-height: 1.5;
+}
+.aufgabe-nr { font-weight: bold; }
+.aufgabe-op { font-weight: bold; }
+
+.hint-row {
+  margin: 4px 0 4px 24px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.hint-btn {
+  background: #FFF3E0;
+  color: #E65100;
+  border: 1.5px solid #FFCC80;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  touch-action: manipulation;
+}
+.hint-btn.aktiv { background: #FFCC80; }
+.hint-content {
+  display: none;
+  margin: 4px 0 8px 24px;
+  padding: 8px 12px;
+  background: #FFF3E0;
+  border-left: 3px solid #FF9800;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.hint-content.aktiv { display: block; }
+
+/* CANVAS */
+.canvas-wrap {
+  margin: 8px 0 16px 24px;
+  border: 1.5px solid var(--grey-line);
+  border-radius: 4px;
+  background: #FCFCFC;
+  position: relative;
+  overflow: hidden;
+}
+.canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  touch-action: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 39px,
+      #E8E8E8 39px,
+      #E8E8E8 40px
+    );
+}
+.pen-puffer {
+  height: 6px;
+  background: transparent;
+  touch-action: none;
+}
+.canvas-toolbar {
+  padding: 6px 8px;
+  background: var(--grey-light);
+  border-top: 1px solid var(--grey-line);
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.tool-btn {
+  background: white;
+  color: var(--dark);
+  border: 1px solid var(--grey-line);
+  padding: 4px 10px;
+  font-size: 12.5px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  touch-action: manipulation;
+}
+.tool-btn:active { background: var(--cyan-light); }
+.tool-btn.danger { color: #C62828; border-color: #FFCDD2; }
+.tool-btn.danger:active { background: #FFEBEE; }
+.tool-btn.undo { background: #FFF8E1; color: #6B5B00; border-color: #FFE082; }
+.tool-btn.undo:active { background: #FFE082; }
+.tool-btn.undo:disabled { background: #F5F5F5; color: #BBB; border-color: #E0E0E0; cursor: not-allowed; }
+
+/* FARBPALETTE */
+.farbpalette {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  margin-left: 6px;
+  padding-left: 8px;
+  border-left: 1px solid var(--grey-line);
+}
+.farb-btn {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
+  cursor: pointer;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: transform 0.1s;
+  touch-action: manipulation;
+}
+.farb-btn.aktiv {
+  box-shadow: 0 0 0 2px var(--cyan-dark);
+  transform: scale(1.15);
+}
+.farb-btn:active { transform: scale(0.95); }
+
+/* Radierer-Knopf: weißer Hintergrund, etwas dickerer Rand zur Unterscheidung,
+   Emoji mittig. Funktioniert wie eine ganz normale Farbe (malt weiß) — der
+   Unterschied ist nur visuell. */
+.farb-btn.farb-radierer {
+  background: #FFFFFF;
+  border: 2px solid #999;
+  font-size: 12px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-left: 4px;
+}
+.farb-btn.farb-radierer.aktiv {
+  border-color: var(--cyan-dark);
+  box-shadow: 0 0 0 2px var(--cyan-dark);
+}
+
+/* SIMULATION */
+.sim-box {
+  margin: 12px 0;
+  border: 1.5px solid var(--grey-line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+}
+.sim-header {
+  padding: 8px 12px;
+  background: var(--cyan-light);
+  font-weight: bold;
+  color: var(--dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+.sim-canvas-wrap {
+  width: 100%;
+  background: #FAFCFE;
+  position: relative;
+}
+.sim-controls {
+  padding: 8px 12px;
+  background: var(--grey-light);
+  border-top: 1px solid var(--grey-line);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.sim-scrub {
+  padding: 6px 12px 10px 12px;
+  background: var(--grey-light);
+  border-top: 1px solid var(--grey-line);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sim-scrub label {
+  font-size: 11px;
+  color: #666;
+  font-weight: bold;
+  white-space: nowrap;
+}
+.sim-scrub input[type="range"] {
+  flex: 1;
+  height: 28px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  margin: 0;
+  touch-action: manipulation;
+}
+.sim-scrub input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--cyan-light);
+  border-radius: 2px;
+}
+.sim-scrub input[type="range"]::-moz-range-track {
+  height: 4px;
+  background: var(--cyan-light);
+  border-radius: 2px;
+}
+.sim-scrub input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--cyan);
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  margin-top: -9px;
+  cursor: grab;
+}
+.sim-scrub input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--cyan);
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  cursor: grab;
+}
+.sim-btn {
+  background: var(--cyan);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  touch-action: manipulation;
+}
+.sim-btn:active { background: var(--cyan-dark); }
+.sim-btn.secondary {
+  background: white;
+  color: var(--cyan-dark);
+  border: 1.5px solid var(--cyan);
+}
+
+/* WORKFLOW */
+.aufgabe-fertig-row {
+  margin: 8px 0 24px 24px;
+  display: flex;
+  gap: 10px;
+}
+.workflow-btn {
+  background: #2E7D32;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  touch-action: manipulation;
+}
+.workflow-btn:disabled { background: #BDBDBD; cursor: not-allowed; }
+.workflow-btn.verbesserung { background: #1976D2; }
+.workflow-btn.naechste { background: var(--cyan-dark); }
+
+.quiz-panel {
+  background: #FAFCFF;
+  border: 2px solid #1976D2;
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin: 24px 0;
+  box-shadow: 0 2px 8px rgba(25,118,210,0.08);
+}
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #1976D2;
+  font-weight: bold;
+  font-size: 15px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #C5DDF6;
+}
+.quiz-counter { font-weight: normal; font-size: 13px; color: #666; }
+.quiz-frage {
+  font-size: 17px;
+  font-weight: bold;
+  margin: 8px 0 14px 0;
+  line-height: 1.45;
+}
+.quiz-antworten {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.quiz-antwort {
+  background: white;
+  border: 2px solid #C5DDF6;
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+  touch-action: manipulation;
+}
+.quiz-antwort:active { background: #E3F2FD; }
+.quiz-antwort.richtig { background: #E8F5E9; border-color: #2E7D32; }
+.quiz-antwort.falsch { background: #FFEBEE; border-color: #C62828; }
+.quiz-antwort.disabled { cursor: not-allowed; pointer-events: none; }
+.quiz-feedback {
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin: 8px 0 12px 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+.quiz-feedback.richtig { background: #E8F5E9; border-left: 4px solid #2E7D32; }
+.quiz-feedback.falsch { background: #FFEBEE; border-left: 4px solid #C62828; }
+.quiz-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.naechste-panel {
+  background: #F1F8E9;
+  border: 2px dashed #558B2F;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 20px 0;
+  text-align: center;
+}
+.naechste-panel p { margin: 0 0 12px 0; color: #33691E; font-weight: 500; }
+
+/* FOOTER-LEISTE */
+.footer-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: white;
+  border-top: 1.5px solid var(--grey-line);
+  padding: 10px 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  z-index: 100;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+}
+.footer-btn {
+  background: var(--cyan);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  touch-action: manipulation;
+}
+.footer-btn.secondary {
+  background: white;
+  color: var(--text);
+  border: 1px solid var(--grey-line);
+}
+.footer-btn:active { transform: translateY(1px); }
+
+/* OVERLAY für PDF-Generierung */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.92);
+  z-index: 999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.overlay.aktiv { display: flex; }
+.spinner {
+  width: 48px; height: 48px;
+  border: 4px solid var(--grey-line);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 600px) {
+  .ab-container { padding: 12px 14px 100px 14px; }
+  .ab-header h1 { font-size: 20px; }
+  .canvas-wrap { margin-left: 0; }
+  .aufgabe-text, .hint-row, .hint-content { margin-left: 0; }
+  .aufgabe-fertig-row { margin-left: 0; }
+}

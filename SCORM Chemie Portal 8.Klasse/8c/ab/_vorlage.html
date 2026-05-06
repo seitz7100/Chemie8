@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  AB-VORLAGE — kopiere diese Datei nach ab/<name>.html und
+  passe folgende Stellen an (mit "// EDIT:" markiert):
+
+    1. <title> + Header (Titel, Untertitel, Datum)
+    2. modulKey im ABEngine.init(...)
+    3. Inhaltsblöcke (Aufgaben, Sims, Hinweise)
+    4. Sim-IIFEs (eigene Simulationen)
+    5. PDF-Inhalt (h.section, h.aufgabe, ...)
+
+  Engine + PDF + CSS sind gemeinsame Dateien in shared/ —
+  Verbesserungen dort wirken automatisch in allen ABs.
+  ============================================================
+-->
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<!-- EDIT: Titel anpassen -->
+<title>AB Vorlage – 8c</title>
+<link rel="stylesheet" href="../../shared/ab-engine.css">
+<script src="../../shared/jspdf.umd.min.js"></script>
+<script src="../../shared/scorm-adapter.js"></script>
+<script src="../grundwissen-pool.js"></script>
+<script src="../../shared/ab-engine.js"></script>
+<script src="../../shared/ab-pdf.js"></script>
+<style>
+  /* Optional: AB-spezifische Anpassungen hier rein */
+</style>
+</head>
+<body>
+
+<div class="ab-container">
+
+  <div class="ab-zurueck-leiste">
+    <a href="../arbeitsblaetter.html" class="ab-zurueck-link">← Zurück zur Übersicht</a>
+  </div>
+
+  <!-- HEADER — EDIT: Titel und Datum -->
+  <div class="ab-header">
+    <h1>Vorlagen-Titel</h1>
+    <div class="meta">01.01.2026&nbsp;&nbsp;8c</div>
+  </div>
+
+  <!-- ============================================================
+       VERSUCH / EINFÜHRUNG (optional)
+       ============================================================ -->
+  <h2 class="section">Der Versuch</h2>
+  <p class="lead"><strong>Aufbau:</strong> Beschreibung des Versuchs.</p>
+
+  <!-- Beispiel-Sim-Container — EDIT: Canvas-ID und Buttons -->
+  <div class="sim-box" data-sim="beispiel">
+    <div class="sim-header">
+      <span>🔬 Versuchsablauf</span>
+      <span style="font-weight:normal; font-size:12px;">tippe auf „Starten"</span>
+    </div>
+    <div class="sim-canvas-wrap">
+      <canvas id="sim-beispiel" width="800" height="320" style="width:100%; height:auto; display:block;"></canvas>
+    </div>
+    <div class="sim-controls">
+      <button class="sim-btn" data-action="beispiel-start">▶ Starten</button>
+      <button class="sim-btn secondary" data-action="beispiel-reset">↺ Zurücksetzen</button>
+    </div>
+    <div class="sim-scrub">
+      <label>Verlauf</label>
+      <input type="range" id="scrub-beispiel" min="0" max="1000" value="0" step="1">
+    </div>
+  </div>
+
+  <p class="lead"><strong>Beobachtung:</strong> Was passiert?</p>
+
+  <!-- ============================================================
+       AUFGABEN — EDIT: Inhalte
+       Jede Aufgabe ist ein .aufgabe-block mit data-aufgabe="N".
+       Der erste ist sichtbar, alle anderen "hidden" — wird vom
+       Workflow gesteuert.
+       Canvas-IDs müssen einmalig sein und in allen Selektoren matchen.
+       ============================================================ -->
+
+  <!-- AUFGABE 1 -->
+  <div class="aufgabe-block" data-aufgabe="1">
+    <h2 class="section">Aufgabe 1 – Titel</h2>
+    <div class="aufgabe">
+      <div class="aufgabe-text">
+        <span class="aufgabe-op">Beschreibe</span> deine Beobachtungen.
+      </div>
+      <div class="hint-row">
+        <button class="hint-btn" data-hint="h1a">💡 Hinweis</button>
+      </div>
+      <div class="hint-content" id="h1a">Tipp-Text hier.</div>
+      <div class="canvas-wrap" data-canvas="v1"><canvas></canvas>
+        <div class="canvas-toolbar">
+          <button class="tool-btn" data-canvas-action="bigger" data-target="v1">↕ Größer</button>
+          <button class="tool-btn undo" data-canvas-action="undo" data-target="v1" disabled>↶ Rückgängig</button>
+          <span class="farbpalette">
+            <button class="farb-btn aktiv" data-farbe="#1A3A5C" style="background:#1A3A5C"></button>
+            <button class="farb-btn" data-farbe="#000000" style="background:#000000"></button>
+            <button class="farb-btn" data-farbe="#C62828" style="background:#C62828"></button>
+            <button class="farb-btn" data-farbe="#2E7D32" style="background:#2E7D32"></button>
+            <button class="farb-btn" data-farbe="#EF6C00" style="background:#EF6C00"></button>
+            <button class="farb-btn" data-farbe="#6A1B9A" style="background:#6A1B9A"></button>
+            <button class="farb-btn farb-radierer" data-farbe="#FFFFFF" style="background:#FFFFFF" title="Radierer (malt weiß)">🧽</button>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="aufgabe-fertig-row">
+      <button class="workflow-btn" data-workflow="fertig" data-aufgabe="1">✓ Aufgabe fertig</button>
+    </div>
+  </div>
+
+  <!-- AUFGABE 2 (zunächst hidden) -->
+  <div class="aufgabe-block" data-aufgabe="2" hidden>
+    <h2 class="section">Aufgabe 2 – Titel</h2>
+    <div class="info-box">
+      <strong>Hinweis-Box:</strong> Hintergrundinfo, falls nötig.
+    </div>
+    <div class="aufgabe">
+      <div class="aufgabe-text">
+        <span class="aufgabe-op">Erkläre,</span> warum …
+      </div>
+      <div class="canvas-wrap" data-canvas="v2"><canvas></canvas>
+        <div class="canvas-toolbar">
+          <button class="tool-btn" data-canvas-action="bigger" data-target="v2">↕ Größer</button>
+          <button class="tool-btn undo" data-canvas-action="undo" data-target="v2" disabled>↶ Rückgängig</button>
+          <span class="farbpalette">
+            <button class="farb-btn aktiv" data-farbe="#1A3A5C" style="background:#1A3A5C"></button>
+            <button class="farb-btn" data-farbe="#000000" style="background:#000000"></button>
+            <button class="farb-btn" data-farbe="#C62828" style="background:#C62828"></button>
+            <button class="farb-btn" data-farbe="#2E7D32" style="background:#2E7D32"></button>
+            <button class="farb-btn" data-farbe="#EF6C00" style="background:#EF6C00"></button>
+            <button class="farb-btn" data-farbe="#6A1B9A" style="background:#6A1B9A"></button>
+            <button class="farb-btn farb-radierer" data-farbe="#FFFFFF" style="background:#FFFFFF" title="Radierer (malt weiß)">🧽</button>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="aufgabe-fertig-row">
+      <button class="workflow-btn" data-workflow="fertig" data-aufgabe="2">✓ Aufgabe fertig</button>
+    </div>
+  </div>
+
+  <!-- ... weitere Aufgaben analog ... -->
+
+  <!-- ============================================================
+       MERKE (optional, wird nach letzter Aufgabe sichtbar)
+       ============================================================ -->
+  <div class="merke-box" id="merke-final" hidden>
+    <div class="label">Merke</div>
+    Merksatz hier eintragen.
+  </div>
+
+  <!-- ============================================================
+       QUIZ-PANEL (gemeinsam für alle Aufgaben — bitte unverändert!)
+       ============================================================ -->
+  <div class="quiz-panel" id="quiz-panel" hidden>
+    <div class="quiz-header">
+      <span>📚 Grundwissen-Quiz</span>
+      <span class="quiz-counter" id="quiz-counter"></span>
+    </div>
+    <div class="quiz-frage" id="quiz-frage"></div>
+    <div class="quiz-antworten" id="quiz-antworten"></div>
+    <div class="quiz-feedback" id="quiz-feedback" hidden></div>
+    <div class="quiz-controls">
+      <button class="workflow-btn" id="btn-naechste-frage" hidden>Nächste Frage →</button>
+      <button class="workflow-btn verbesserung" id="btn-verbesserung">↩ Verbesserung</button>
+    </div>
+  </div>
+
+  <div class="naechste-panel" id="naechste-panel" hidden>
+    <p>Verbessere deine Antwort oben, dann geht es weiter.</p>
+    <button class="workflow-btn naechste" id="btn-naechste-aufgabe">Nächste Aufgabe →</button>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer-bar">
+  <button class="footer-btn secondary" id="btn-clear-all">🗑 Alle Notizen löschen</button>
+  <button class="footer-btn" id="btn-export-pdf">📄 Als PDF exportieren</button>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <div id="overlay-text">PDF wird erstellt …</div>
+</div>
+
+<script>
+/* ============================================================
+   SIMULATIONEN — EDIT: hier eigene IIFEs einfügen
+   Jede Sim sollte exportieren: { play, reset } für PDF-Snapshots.
+   ============================================================ */
+
+// Beispiel: Demo-Sim, die nur einen Text rendert.
+// Ersetze diesen Block durch deine eigene Sim.
+const beispielSim = (() => {
+  const c = document.getElementById('sim-beispiel');
+  if (!c) return { play(){}, reset(){}, draw(){} };
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  const scrub = document.getElementById('scrub-beispiel');
+  const state = { t: 0, playing: false, lastFrameTs: 0 };
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#1A3A5C';
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Beispiel-Simulation', W/2, H/2 - 10);
+    ctx.font = '13px Arial';
+    ctx.fillStyle = '#666';
+    ctx.fillText('Verlauf: ' + Math.round(state.t * 100) + '%', W/2, H/2 + 12);
+    if (scrub && !scrub._dragging) scrub.value = Math.round(state.t * 1000);
+  }
+  const PLAY_DURATION = 4000;
+  function tick(now) {
+    if (!state.playing) return;
+    const dt = (now - state.lastFrameTs) / PLAY_DURATION;
+    state.lastFrameTs = now;
+    state.t = Math.min(1, state.t + dt);
+    draw();
+    if (state.t < 1) requestAnimationFrame(tick);
+    else state.playing = false;
+  }
+  function play() {
+    if (state.t >= 1) state.t = 0;
+    state.playing = true;
+    state.lastFrameTs = performance.now();
+    requestAnimationFrame(tick);
+  }
+  function reset() { state.t = 0; state.playing = false; if (scrub) scrub.value = 0; draw(); }
+  if (scrub) {
+    scrub.addEventListener('input', () => {
+      scrub._dragging = true; state.playing = false;
+      state.t = parseInt(scrub.value, 10) / 1000; draw();
+    });
+    scrub.addEventListener('change', () => { scrub._dragging = false; });
+    scrub.addEventListener('pointerup', () => { scrub._dragging = false; });
+  }
+  draw();
+  return { play, reset };
+})();
+
+/* ---- Sim-Buttons binden ---- */
+document.querySelectorAll('[data-action]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const a = btn.dataset.action;
+    if (a === 'beispiel-start') beispielSim.play();
+    if (a === 'beispiel-reset') beispielSim.reset();
+  });
+});
+
+/* ============================================================
+   ENGINE INITIALISIEREN — EDIT: modulKey eindeutig wählen!
+   ============================================================ */
+ABEngine.init({
+  modulKey: 'ab.vorlage.v1',          // EDIT: eindeutig pro AB!
+  aufgabenAnzahl: 2,                  // EDIT: Anzahl der .aufgabe-block
+  quizPool: window.GRUNDWISSEN_POOL
+});
+
+/* ============================================================
+   PDF-EXPORT — EDIT: Inhalt der PDF
+   ============================================================ */
+document.getElementById('btn-export-pdf').addEventListener('click', () => {
+  ABPdf.export({
+    titel: 'Vorlagen-Titel',                              // EDIT
+    untertitel: 'Untertitel falls gewünscht',             // EDIT
+    klasse: '8c',
+    datum: '1. Januar 2026',                              // EDIT
+    dateiname: 'Vorlage_Klasse_8c.pdf',                   // EDIT
+    inhalt: (h) => {
+      h.section('Der Versuch');
+      h.paragraph('Aufbau: Beschreibung.');
+      h.simSnapshot(document.getElementById('sim-beispiel'),
+                    'Abb. 1 · Versuch',
+                    'Bildunterschrift hier.');
+      h.paragraph('Beobachtung: Was passiert?');
+
+      h.section('Aufgabe 1 – Titel');
+      h.aufgabe(1, 'Beschreibe', 'deine Beobachtungen.');
+      h.canvasFeld('v1');
+
+      h.section('Aufgabe 2 – Titel');
+      h.infoBox('Hintergrundinfo.');
+      h.aufgabe(2, 'Erkläre,', 'warum …');
+      h.canvasFeld('v2');
+
+      h.merke('Merksatz hier.');
+    }
+  });
+});
+</script>
+
+</body>
+</html>

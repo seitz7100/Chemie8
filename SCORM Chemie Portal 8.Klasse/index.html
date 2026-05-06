@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chemie 8c</title>
+<script src="shared/scorm-adapter.js"></script>
+<meta http-equiv="refresh" content="0; url=8c/index.html">
+<style>
+  html, body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #F5F8FA; color: #1F4E79; }
+  .center { display: flex; min-height: 100vh; align-items: center; justify-content: center; }
+  .box { text-align: center; padding: 40px; }
+  .box h1 { margin: 0 0 12px; font-size: 22px; }
+  .box p { margin: 0 0 18px; color: #555; }
+  .box a { color: #00B0F0; text-decoration: none; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="center">
+  <div class="box">
+    <h1>Chemie 8c</h1>
+    <p>Wird geladen …</p>
+    <p><a href="8c/index.html">Hier klicken, falls die Seite nicht automatisch lädt.</a></p>
+  </div>
+</div>
+<script>
+  // SCORM einmal sauber initialisieren, damit mebis weiß, dass die Lerneinheit
+  // begonnen hat. Die eigentliche Arbeit läuft dann in 8c/index.html und den
+  // Unterseiten weiter (alle teilen sich die SCORM-Session über window.parent).
+  if (window.SCORM) {
+    SCORM.init();
+    SCORM.set('cmi.core.lesson_status', 'incomplete');
+    SCORM.commit();
+  }
+  // Direkt weiterleiten (zusätzlich zum meta-refresh, falls JS schneller ist)
+  setTimeout(() => { location.replace('8c/index.html'); }, 50);
+</script>
+</body>
+</html>

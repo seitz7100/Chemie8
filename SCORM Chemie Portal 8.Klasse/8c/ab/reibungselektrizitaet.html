@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>AB Reibungselektrizität – 8c</title>
+<link rel="stylesheet" href="../../shared/ab-engine.css">
+<script src="../../shared/jspdf.umd.min.js"></script>
+<script src="../../shared/scorm-adapter.js"></script>
+<script src="../grundwissen-pool.js"></script>
+<script src="../../shared/ab-engine.js"></script>
+<script src="../../shared/ab-pdf.js"></script>
+</head>
+<body>
+
+<div class="ab-container">
+
+  <div class="ab-zurueck-leiste">
+    <a href="../arbeitsblaetter.html" class="ab-zurueck-link">← Zurück zur Übersicht</a>
+  </div>
+
+  <div class="ab-header">
+    <h1>Reibungselektrizität – Was passiert mit den Atomen?</h1>
+    <div class="meta">05.05.2026&nbsp;&nbsp;8c</div>
+  </div>
+
+  <h2 class="section">Der Versuch</h2>
+  <p class="lead"><strong>Aufbau:</strong> Ein aufgeblasener Luftballon wird kräftig an einem Wolltuch gerieben und anschließend langsam an kleine Papierschnipsel angenähert.</p>
+
+  <div class="sim-box" data-sim="ballon">
+    <div class="sim-header">
+      <span>🎈 Versuchsablauf</span>
+      <span style="font-weight:normal; font-size:12px;">tippe auf „Versuch starten"</span>
+    </div>
+    <div class="sim-canvas-wrap">
+      <canvas id="sim-ballon" width="800" height="320" style="width:100%; height:auto; display:block;"></canvas>
+    </div>
+    <div class="sim-controls">
+      <button class="sim-btn" data-action="ballon-rub">▶ Versuch starten</button>
+      <button class="sim-btn secondary" data-action="ballon-reset">↺ Zurücksetzen</button>
+    </div>
+    <div class="sim-scrub">
+      <label>Verlauf</label>
+      <input type="range" id="scrub-ballon" min="0" max="1000" value="0" step="1">
+    </div>
+  </div>
+
+  <p class="lead"><strong>Beobachtung:</strong> Nach dem Reiben zieht der Luftballon die Papierschnipsel an — sie springen zum Ballon und bleiben kurz daran kleben. Hält man den Ballon an Haare, stellen sich diese auf.</p>
+
+  <!-- ERKLÄRUNG: Daltons Modell reicht nicht (statt früherer Aufgabe 1) -->
+
+  <div class="info-box">
+    <strong>Problem mit Daltons Atommodell:</strong> Nach <strong>Dalton</strong> sind Atome winzige, <em>unteilbare</em> und <em>ungeladene</em> Kugeln. Damit lassen sich unsere Beobachtungen aber nicht erklären: Beim Reiben muss zwischen Ballon und Wolltuch <em>etwas</em> passieren, das eine Ladung erzeugt — sonst könnten die Papierschnipsel nicht angezogen werden. Wenn alle Atome ungeladen wären, könnte auch beim Reiben keine Ladung entstehen.
+  </div>
+
+  <!-- AUFGABE 1 (vormals 2) -->
+
+  <div class="aufgabe-block" data-aufgabe="1">
+    <h2 class="section">Aufgabe 1 – Thomson löst das Rätsel</h2>
+    <div class="info-box">
+      Der englische Physiker <strong>J. J. Thomson</strong> zeigte 1897, dass es in jedem Atom kleinste, negativ geladene und bewegliche Teilchen gibt — die <strong>Elektronen</strong>. Da Atome nach außen hin aber <em>ungeladen</em> sind, muss der restliche Teil des Atoms <strong>positiv geladen</strong> sein und die negative Ladung der Elektronen genau ausgleichen.<br><br>
+      Später zeigte sich: Auch dieser positiv geladene Teil besteht aus kleinsten Teilchen — den <strong>Protonen</strong>. Sie tragen jeweils eine positive Ladung und haben eine deutlich größere Masse als Elektronen.
+    </div>
+
+```
+<div class="sim-box" data-sim="atom">
+  <div class="sim-header">
+    <span>⚛ Vergleich: Dalton ↔ Thomson</span>
+    <span style="font-weight:normal; font-size:12px;">links: Dalton · rechts: Thomson</span>
+  </div>
+  <div class="sim-canvas-wrap">
+    <canvas id="sim-atom" width="800" height="340" style="width:100%; height:auto; display:block;"></canvas>
+  </div>
+  <div class="sim-controls">
+    <button class="sim-btn" data-action="atom-animate">▶ Elektronen zeigen</button>
+    <button class="sim-btn secondary" data-action="atom-reset">↺ Zurücksetzen</button>
+  </div>
+  <div class="sim-scrub">
+    <label>Verlauf</label>
+    <input type="range" id="scrub-atom" min="0" max="1000" value="0" step="1">
+  </div>
+</div>
+
+<div class="aufgabe">
+  <div class="aufgabe-text"><span class="aufgabe-nr">a)</span> <span class="aufgabe-op">Beschreibe</span> die Unterschiede zwischen dem Atommodell nach Dalton und dem Atommodell nach Thomson.</div>
+  <div class="canvas-wrap" data-canvas="a1a"><canvas></canvas>
+    <div class="canvas-toolbar">
+      <button class="tool-btn" data-canvas-action="bigger" data-target="a1a">↕ Größer</button>
+      <button class="tool-btn undo" data-canvas-action="undo" data-target="a1a" disabled>↶ Rückgängig</button>
+      <span class="farbpalette">
+        <button class="farb-btn aktiv" data-farbe="#1A3A5C" style="background:#1A3A5C"></button>
+        <button class="farb-btn" data-farbe="#000000" style="background:#000000"></button>
+        <button class="farb-btn" data-farbe="#C62828" style="background:#C62828"></button>
+        <button class="farb-btn" data-farbe="#2E7D32" style="background:#2E7D32"></button>
+        <button class="farb-btn" data-farbe="#EF6C00" style="background:#EF6C00"></button>
+        <button class="farb-btn" data-farbe="#6A1B9A" style="background:#6A1B9A"></button>
+      <button class="farb-btn farb-radierer" data-farbe="#FFFFFF" style="background:#FFFFFF" title="Radierer (malt weiß)">🧽</button>
+      </span>
+    </div>
+  </div>
+</div>
+<div class="aufgabe">
+  <div class="aufgabe-text"><span class="aufgabe-nr">b)</span> <span class="aufgabe-op">Begründe,</span> warum Atome nach Thomsons Erkenntnis nicht mehr als „unteilbar" gelten können.</div>
+  <div class="canvas-wrap" data-canvas="a1b"><canvas></canvas>
+    <div class="canvas-toolbar">
+      <button class="tool-btn" data-canvas-action="bigger" data-target="a1b">↕ Größer</button>
+      <button class="tool-btn undo" data-canvas-action="undo" data-target="a1b" disabled>↶ Rückgängig</button>
+      <span class="farbpalette">
+        <button class="farb-btn aktiv" data-farbe="#1A3A5C" style="background:#1A3A5C"></button>
+        <button class="farb-btn" data-farbe="#000000" style="background:#000000"></button>
+        <button class="farb-btn" data-farbe="#C62828" style="background:#C62828"></button>
+        <button class="farb-btn" data-farbe="#2E7D32" style="background:#2E7D32"></button>
+        <button class="farb-btn" data-farbe="#EF6C00" style="background:#EF6C00"></button>
+        <button class="farb-btn" data-farbe="#6A1B9A" style="background:#6A1B9A"></button>
+      <button class="farb-btn farb-radierer" data-farbe="#FFFFFF" style="background:#FFFFFF" title="Radierer (malt weiß)">🧽</button>
+      </span>
+    </div>
+  </div>
+</div>
+<div class="aufgabe-fertig-row">
+  <button class="workflow-btn" data-workflow="fertig" data-aufgabe="1">✓ Aufgabe fertig</button>
+</div>
+```
+
+  </div>
+
+  <!-- AUFGABE 2 -->
+
+  <!-- AUFGABE 2 (vormals 3) -->
+
+  <div class="aufgabe-block" data-aufgabe="2" hidden>
+    <h2 class="section">Aufgabe 2 – Zurück zum Luftballon</h2>
+
+```
+<div class="sim-box" data-sim="ballon-elektronen">
+  <div class="sim-header">
+    <span>🎈 Versuch mit Elektronen</span>
+    <span style="font-weight:normal; font-size:12px;">jetzt sind die Elektronen sichtbar</span>
+  </div>
+  <div class="sim-canvas-wrap">
+    <canvas id="sim-ballon-e" width="800" height="320" style="width:100%; height:auto; display:block;"></canvas>
+  </div>
+  <div class="sim-controls">
+    <button class="sim-btn" data-action="ballon-e-rub">▶ Versuch starten</button>
+    <button class="sim-btn secondary" data-action="ballon-e-reset">↺ Zurücksetzen</button>
+  </div>
+  <div class="sim-scrub">
+    <label>Verlauf</label>
+    <input type="range" id="scrub-ballon-e" min="0" max="1000" value="0" step="1">
+  </div>
+</div>
+
+<div class="aufgabe">
+  <div class="aufgabe-text"><span class="aufgabe-nr">a)</span> <span class="aufgabe-op">Erkläre</span> mithilfe der neuen Erkenntnisse und der Simulation, was beim Reiben des Luftballons am Wolltuch auf der Teilchenebene passiert. Verwende dabei die Begriffe <em>Elektronen, Protonen, positiv geladen</em> und <em>negativ geladen</em>.</div>
+  <div class="hint-row">
+    <button class="hint-btn" data-hint="h2a">💡 Hinweis 1</button>
+    <button class="hint-btn" data-hint="h2b">💡 Hinweis 2</button>
+  </div>
+  <div class="hint-content" id="h2a">Welcher der beiden Bausteine sitzt fest im Atomkern? Welcher ist beweglich in der Hülle?</div>
+  <div class="hint-content" id="h2b">In welche Richtung wandern die Elektronen beim Reiben — von Wolle zum Ballon oder umgekehrt? Was bleibt jeweils zurück?</div>
+  <div class="canvas-wrap" data-canvas="a2a"><canvas></canvas>
+    <div class="canvas-toolbar">
+      <button class="tool-btn" data-canvas-action="bigger" data-target="a2a">↕ Größer</button>
+      <button class="tool-btn undo" data-canvas-action="undo" data-target="a2a" disabled>↶ Rückgängig</button>
+      <span class="farbpalette">
+        <button class="farb-btn aktiv" data-farbe="#1A3A5C" style="background:#1A3A5C"></button>
+        <button class="farb-btn" data-farbe="#000000" style="background:#000000"></button>
+        <button class="farb-btn" data-farbe="#C62828" style="background:#C62828"></button>
+        <button class="farb-btn" data-farbe="#2E7D32" style="background:#2E7D32"></button>
+        <button class="farb-btn" data-farbe="#EF6C00" style="background:#EF6C00"></button>
+        <button class="farb-btn" data-farbe="#6A1B9A" style="background:#6A1B9A"></button>
+      <button class="farb-btn farb-radierer" data-farbe="#FFFFFF" style="background:#FFFFFF" title="Radierer (malt weiß)">🧽</button>
+      </span>
+    </div>
+  </div>
+</div>
+<div class="aufgabe-fertig-row">
+  <button class="workflow-btn" data-workflow="fertig" data-aufgabe="2">✓ Aufgabe fertig</button>
+</div>
+```
+
+  </div>
+
+  <!-- AUFGABE 3 (vormals 4) -->
+
+  <div class="aufgabe-block" data-aufgabe="3" hidden>
+    <h2 class="section">Aufgabe 3 – Merksatz</h2>
+    <div class="aufgabe">
+      <div class="aufgabe-text"><span class="aufgabe-nr">a)</span> <span class="aufgabe-op">Formuliere</span> einen eigenen Merksatz. Erkläre darin, was Elektronen sind (Ladung, Beweglichkeit, Masse) und woraus ein Atom besteht.</div>
+      <div class="hint-row">
+        <button class="hint-btn" data-hint="h3a">💡 Hinweis</button>
+      </div>
+      <div class="hint-content" id="h3a">Verwende in deinem Merksatz die Begriffe <em>negative Ladungsträger, beweglich, geringe Masse</em> sowie <em>Elektronen</em> und <em>Protonen</em>.</div>
+      <div class="canvas-wrap" data-canvas="a3a"><canvas></canvas>
+        <div class="canvas-toolbar">
+          <button class="tool-btn" data-canvas-action="bigger" data-target="a3a">↕ Größer</button>
+          <button class="tool-btn undo" data-canvas-action="undo" data-target="a3a" disabled>↶ Rückgängig</button>
+          <span class="farbpalette">
+            <button class="farb-btn aktiv" data-farbe="#1A3A5C" style="background:#1A3A5C"></button>
+            <button class="farb-btn" data-farbe="#000000" style="background:#000000"></button>
+            <button class="farb-btn" data-farbe="#C62828" style="background:#C62828"></button>
+            <button class="farb-btn" data-farbe="#2E7D32" style="background:#2E7D32"></button>
+            <button class="farb-btn" data-farbe="#EF6C00" style="background:#EF6C00"></button>
+            <button class="farb-btn" data-farbe="#6A1B9A" style="background:#6A1B9A"></button>
+            <button class="farb-btn farb-radierer" data-farbe="#FFFFFF" style="background:#FFFFFF" title="Radierer (malt weiß)">🧽</button>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="aufgabe-fertig-row">
+      <button class="workflow-btn" data-workflow="fertig" data-aufgabe="3">✓ Aufgabe fertig</button>
+    </div>
+  </div>
+
+  <!-- QUIZ + NÄCHSTE-PANEL -->
+
+  <div class="quiz-panel" id="quiz-panel" hidden>
+    <div class="quiz-header">
+      <span>📚 Grundwissen-Quiz</span>
+      <span class="quiz-counter" id="quiz-counter"></span>
+    </div>
+    <div class="quiz-frage" id="quiz-frage"></div>
+    <div class="quiz-antworten" id="quiz-antworten"></div>
+    <div class="quiz-feedback" id="quiz-feedback" hidden></div>
+    <div class="quiz-controls">
+      <button class="workflow-btn" id="btn-naechste-frage" hidden>Nächste Frage →</button>
+      <button class="workflow-btn verbesserung" id="btn-verbesserung">↩ Verbesserung</button>
+    </div>
+  </div>
+
+  <div class="naechste-panel" id="naechste-panel" hidden>
+    <p>Verbessere deine Antwort oben, dann geht es weiter.</p>
+    <button class="workflow-btn naechste" id="btn-naechste-aufgabe">Nächste Aufgabe →</button>
+  </div>
+
+</div>
+
+<div class="footer-bar">
+  <button class="footer-btn secondary" id="btn-clear-all">🗑 Alle Notizen löschen</button>
+  <button class="footer-btn" id="btn-export-pdf">📄 Als PDF exportieren</button>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <div id="overlay-text">PDF wird erstellt …</div>
+</div>
+
+<script>
+/* SIMULATIONEN */
+const ballon = (() => {
+  const c = document.getElementById('sim-ballon');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  const scrub = document.getElementById('scrub-ballon');
+
+  // Layout — Schnipsel zentriert, weiter oben (war zu nah am Tisch)
+  const TISCH_Y = 290;             // Tisch-Oberkante
+  const SCHNIPSEL_X = W / 2;       // ZENTRIERT
+  const SCHNIPSEL_Y = TISCH_Y - 8; // gerade auf dem Tisch
+  const WOLLE_X = 130, WOLLE_Y = 165;     // links
+  const BALLON_START_X = 320;             // links neben Wolltuch
+  const BALLON_START_Y = 165;
+  const BALLON_OVER_X = SCHNIPSEL_X;      // direkt über den Schnipseln (zentriert)
+  const BALLON_OVER_Y = SCHNIPSEL_Y - 90; // schwebt über dem Tisch
+
+  // Schnipsel deterministisch (aus seed) anlegen — nicht zufällig pro draw,
+  // damit Scrubben hin/her dieselben Positionen behält.
+  const SCHNIPSEL_BASIS = [];
+  function seed(n) { return ((Math.sin(n * 12.9898) * 43758.5453) % 1 + 1) % 1; }
+  for (let i = 0; i < 14; i++) {
+    SCHNIPSEL_BASIS.push({
+      bx: SCHNIPSEL_X + (seed(i) - 0.5) * 70,
+      by: SCHNIPSEL_Y - seed(i + 100) * 4,
+      ang0: (seed(i + 200) - 0.5) * 0.5,
+      size: 6 + seed(i + 300) * 3,
+      delay: seed(i + 400) * 0.35   // pro Schnipsel: wann er anfängt zum Ballon zu fliegen
+    });
+  }
+
+  const state = {
+    t: 0,            // 0..1 Timeline-Position
+    playing: false,
+    lastFrameTs: 0
+  };
+
+  // ===== Timeline-Phasen =====
+  // 0.00 .. 0.05 — Idle (Beschreibung "Ausgangslage")
+  // 0.05 .. 0.30 — Ballon wandert nach links zum Wolltuch
+  // 0.30 .. 0.55 — Reiben (Hin und Her am Wolltuch)
+  // 0.55 .. 0.75 — Ballon wandert über die Papierschnipsel
+  // 0.75 .. 1.00 — Schnipsel werden angezogen
+  function phaseOf(t) {
+    if (t < 0.05) return { name: 'idle', local: 0 };
+    if (t < 0.30) return { name: 'approach', local: (t - 0.05) / 0.25 };
+    if (t < 0.55) return { name: 'rub',      local: (t - 0.30) / 0.25 };
+    if (t < 0.75) return { name: 'travel',   local: (t - 0.55) / 0.20 };
+    return         { name: 'attract',  local: (t - 0.75) / 0.25 };
+  }
+  function easeOut(t) { return 1 - (1 - t) * (1 - t); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  // ===== Zeichen-Helpers =====
+  function drawTisch() {
+    ctx.fillStyle = '#A0825F';
+    ctx.fillRect(0, TISCH_Y, W, H - TISCH_Y);
+    ctx.fillStyle = '#8B6F4E';
+    ctx.fillRect(0, TISCH_Y, W, 4);
+  }
+  function drawWolltuch(x, y) {
+    ctx.fillStyle = '#A85939';
+    ctx.beginPath();
+    ctx.moveTo(x - 60, y + 30);
+    ctx.lineTo(x - 60, y - 25);
+    ctx.quadraticCurveTo(x - 55, y - 35, x - 35, y - 32);
+    ctx.lineTo(x + 35, y - 32);
+    ctx.quadraticCurveTo(x + 55, y - 35, x + 60, y - 25);
+    ctx.lineTo(x + 60, y + 30);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#7A4128';
+    ctx.lineWidth = 1;
+    for (let i = -50; i < 50; i += 8) {
+      ctx.beginPath();
+      ctx.moveTo(x + i, y - 28);
+      ctx.lineTo(x + i + 3, y + 25);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#3A1F12';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Wolltuch', x, y + 55);
+  }
+  function drawBallon(x, y) {
+    ctx.fillStyle = '#D32F2F';
+    ctx.beginPath();
+    ctx.ellipse(x, y, 45, 55, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(x - 15, y - 20, 10, 16, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#A0241D';
+    ctx.beginPath();
+    ctx.moveTo(x - 5, y + 53);
+    ctx.lineTo(x + 5, y + 53);
+    ctx.lineTo(x + 3, y + 60);
+    ctx.lineTo(x - 3, y + 60);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x, y + 60);
+    ctx.quadraticCurveTo(x - 10, y + 80, x - 5, y + 100);
+    ctx.stroke();
+  }
+  function drawSchnipsel(s, x, y, ang) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(ang);
+    ctx.fillStyle = '#FAFAFA';
+    ctx.strokeStyle = '#B8B8B8';
+    ctx.lineWidth = 0.6;
+    ctx.fillRect(-s.size/2, -s.size/2, s.size, s.size * 0.7);
+    ctx.strokeRect(-s.size/2, -s.size/2, s.size, s.size * 0.7);
+    ctx.restore();
+  }
+
+  // ===== Zentrale Render-Funktion: zeichnet zum gegebenen t =====
+  function draw() {
+    const t = state.t;
+    const ph = phaseOf(t);
+
+    ctx.clearRect(0, 0, W, H);
+    drawTisch();
+    drawWolltuch(WOLLE_X, WOLLE_Y);
+
+    // Ballon-Position abhängig von Phase berechnen
+    let bx = BALLON_START_X, by = BALLON_START_Y;
+    if (ph.name === 'idle') {
+      bx = BALLON_START_X; by = BALLON_START_Y;
+    } else if (ph.name === 'approach') {
+      // Wandert von Start-X bis kurz neben Wolltuch
+      const targetX = WOLLE_X + 80;
+      bx = lerp(BALLON_START_X, targetX, easeOut(ph.local));
+      by = BALLON_START_Y;
+    } else if (ph.name === 'rub') {
+      // Hin und her am Wolltuch
+      bx = WOLLE_X + 80 + Math.sin(ph.local * Math.PI * 8) * 22;
+      by = BALLON_START_Y;
+    } else if (ph.name === 'travel') {
+      // Wandert von Wolltuch-Position zu über den Schnipseln
+      bx = lerp(WOLLE_X + 80, BALLON_OVER_X, easeOut(ph.local));
+      by = lerp(BALLON_START_Y, BALLON_OVER_Y, easeOut(ph.local));
+    } else { // attract
+      bx = BALLON_OVER_X; by = BALLON_OVER_Y;
+    }
+
+    // Schnipsel zeichnen
+    SCHNIPSEL_BASIS.forEach((s, i) => {
+      let sx = s.bx, sy = s.by, ang = s.ang0;
+      if (ph.name === 'attract') {
+        const localT = Math.max(0, Math.min(1, (ph.local - s.delay) / (1 - s.delay)));
+        const ziehBis = easeOut(localT);
+        sx = lerp(s.bx, bx + (seed(i + 500) - 0.5) * 30, ziehBis);
+        sy = lerp(s.by, by + 30 + seed(i + 600) * 15, ziehBis);
+        ang = s.ang0 + ziehBis * 1.8;
+      }
+      drawSchnipsel(s, sx, sy, ang);
+    });
+
+    drawBallon(bx, by);
+
+    // Beschriftung
+    ctx.fillStyle = '#3A1F12';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    if (ph.name === 'idle' || ph.name === 'approach') {
+      ctx.fillText('Papierschnipsel', SCHNIPSEL_X, SCHNIPSEL_Y + 22);
+    }
+
+    // Status-Text oben — im PDF-Modus weglassen, da dort der Verlauf-Text
+    // ohnehin nur einen Frame zeigt und so verwirrend wäre.
+    if (!window._abPdfModus) {
+      ctx.fillStyle = '#1A3A5C';
+      ctx.font = 'bold 13px Arial';
+      ctx.textAlign = 'left';
+      let status = '';
+      if (ph.name === 'idle')     status = '1) Ausgangslage: Ballon, Wolltuch und Papierschnipsel sind ungeladen.';
+      if (ph.name === 'approach') status = '2) Der Ballon wird zum Wolltuch geführt …';
+      if (ph.name === 'rub')      status = '3) Der Ballon wird am Wolltuch gerieben …';
+      if (ph.name === 'travel')   status = '4) Der Ballon wird über die Papierschnipsel gehalten …';
+      if (ph.name === 'attract')  status = '5) Beobachtung: Die Schnipsel werden angezogen!';
+      ctx.fillText(status, 20, 25);
+    }
+
+    // Slider-Wert nachziehen (ohne Event auszulösen)
+    if (scrub && !scrub._dragging) {
+      scrub.value = Math.round(t * 1000);
+    }
+  }
+
+  // ===== Auto-Play =====
+  const PLAY_DURATION = 7000; // ms für komplette Animation
+  function tick(now) {
+    if (!state.playing) return;
+    const dt = (now - state.lastFrameTs) / PLAY_DURATION;
+    state.lastFrameTs = now;
+    state.t = Math.min(1, state.t + dt);
+    draw();
+    if (state.t >= 1) { state.playing = false; return; }
+    requestAnimationFrame(tick);
+  }
+  function play() {
+    if (state.t >= 1) state.t = 0;
+    state.playing = true;
+    state.lastFrameTs = performance.now();
+    requestAnimationFrame(tick);
+  }
+  function reset() {
+    state.t = 0;
+    state.playing = false;
+    if (scrub) scrub.value = 0;
+    draw();
+  }
+
+  // ===== Slider-Hookup =====
+  if (scrub) {
+    scrub.addEventListener('input', () => {
+      scrub._dragging = true;
+      state.playing = false; // beim Scrubben Auto-Play stoppen
+      state.t = parseInt(scrub.value, 10) / 1000;
+      draw();
+    });
+    scrub.addEventListener('change', () => { scrub._dragging = false; });
+    // Touch-Ende
+    scrub.addEventListener('pointerup', () => { scrub._dragging = false; });
+  }
+
+  draw();
+  // API: rub und reset wie zuvor (alte Sim-Buttons rufen das auf)
+  return { rub: play, reset, draw };
+})();const atomSim = (() => {
+  const c = document.getElementById('sim-atom');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  const scrub = document.getElementById('scrub-atom');
+
+  const state = {
+    t: 0,             // 0..1: 0 = nur Dalton zu sehen, ab ~0.3 fadet Thomson ein, ab 0.6 wackeln Elektronen
+    angle: 0,
+    playing: false,
+    lastFrameTs: 0
+  };
+
+  function drawDalton(cx, cy) {
+    ctx.fillStyle = '#A0A0A0';
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 75, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(cx - 22, cy - 25, 18, 28, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#222';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('DALTON (1808)', cx, cy + 110);
+    ctx.font = '13px Arial';
+    ctx.fillText('Atom = unteilbare Kugel', cx, cy + 130);
+  }
+
+  function drawThomson(cx, cy, elektronAlpha) {
+    ctx.fillStyle = '#F4B5BD';
+    ctx.strokeStyle = '#A93226';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 75, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = '#A93226';
+    ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const plusPositions = [
+      [-40, -30], [-15, -50], [30, -45], [45, -10],
+      [-50, 5], [-25, 25], [10, 35], [40, 25],
+      [-10, 0], [25, 0], [-35, 50], [20, 55], [55, 35],
+    ];
+    plusPositions.forEach(([dx, dy]) => {
+      ctx.fillText('+', cx + dx, cy + dy);
+    });
+
+    if (elektronAlpha > 0) {
+      ctx.globalAlpha = elektronAlpha;
+      const electronPositions = [
+        [-30, -20], [25, -25], [-45, 25], [35, 35],
+        [0, -40], [50, 5], [-20, 45], [10, 15],
+      ];
+      electronPositions.forEach(([dx, dy], i) => {
+        const wobble = Math.sin(state.angle + i) * 2;
+        const x = cx + dx + wobble;
+        const y = cy + dy;
+        ctx.fillStyle = '#1a4d8f';
+        ctx.beginPath();
+        ctx.arc(x, y, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 10px Arial';
+        ctx.fillText('−', x, y);
+      });
+      ctx.globalAlpha = 1;
+    }
+    ctx.textBaseline = 'alphabetic';
+
+    ctx.fillStyle = '#222';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('THOMSON (1897)', cx, cy + 110);
+    ctx.font = '13px Arial';
+    ctx.fillText('Atom = positive Masse + Elektronen', cx, cy + 130);
+  }
+
+  function draw() {
+    const t = state.t;
+    // Elektronen-Sichtbarkeit: ab t=0.3 fadet sie von 0 → 1 bis t=0.6 ein
+    const elektronAlpha = Math.max(0, Math.min(1, (t - 0.3) / 0.3));
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Trennlinie mittig
+    ctx.strokeStyle = '#DDD';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.moveTo(W/2, 30); ctx.lineTo(W/2, H - 30);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    drawDalton(W * 0.27, H/2 - 20);
+    drawThomson(W * 0.73, H/2 - 20, elektronAlpha);
+
+    if (elektronAlpha > 0.5) {
+      ctx.fillStyle = '#00B0F0';
+      ctx.font = 'bold 13px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('→ Atom ist teilbar!', W/2, 30);
+    }
+
+    if (scrub && !scrub._dragging) {
+      scrub.value = Math.round(t * 1000);
+    }
+  }
+
+  const PLAY_DURATION = 4000;
+  function tick(now) {
+    if (!state.playing) return;
+    const dt = (now - state.lastFrameTs) / PLAY_DURATION;
+    state.lastFrameTs = now;
+    state.t = Math.min(1, state.t + dt);
+    state.angle += 0.05;
+    draw();
+    if (state.t < 1) requestAnimationFrame(tick);
+    else {
+      // Elektronen sollen weiter wackeln am Ende
+      animateLoop();
+    }
+  }
+  function animateLoop() {
+    state.playing = true;
+    function loop() {
+      if (!state.playing) return;
+      state.angle += 0.05;
+      draw();
+      requestAnimationFrame(loop);
+    }
+    loop();
+  }
+  function animate() {
+    if (state.t >= 1) { animateLoop(); return; }
+    state.playing = true;
+    state.lastFrameTs = performance.now();
+    requestAnimationFrame(tick);
+  }
+  function reset() {
+    state.playing = false;
+    state.t = 0;
+    state.angle = 0;
+    if (scrub) scrub.value = 0;
+    draw();
+  }
+  if (scrub) {
+    scrub.addEventListener('input', () => {
+      scrub._dragging = true;
+      state.playing = false;
+      state.t = parseInt(scrub.value, 10) / 1000;
+      draw();
+    });
+    scrub.addEventListener('change', () => { scrub._dragging = false; });
+    scrub.addEventListener('pointerup', () => { scrub._dragging = false; });
+  }
+
+  draw();
+  return { animate, reset, draw };
+})();
+const ballonE = (() => {
+  const c = document.getElementById('sim-ballon-e');
+  if (!c) return { rub: () => {}, reset: () => {}, draw: () => {} };
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  const scrub = document.getElementById('scrub-ballon-e');
+
+  const TISCH_Y = 290;
+  const SCHNIPSEL_X = W / 2;
+  const SCHNIPSEL_Y = TISCH_Y - 8;
+  const WOLLE_X = 130, WOLLE_Y = 165;
+  const BALLON_START_X = 320;
+  const BALLON_START_Y = 165;
+  const BALLON_OVER_X = SCHNIPSEL_X;
+  const BALLON_OVER_Y = SCHNIPSEL_Y - 90;
+
+  const SCHNIPSEL_BASIS = [];
+  function seed(n) { return ((Math.sin(n * 12.9898) * 43758.5453) % 1 + 1) % 1; }
+  for (let i = 0; i < 14; i++) {
+    SCHNIPSEL_BASIS.push({
+      bx: SCHNIPSEL_X + (seed(i) - 0.5) * 70,
+      by: SCHNIPSEL_Y - seed(i + 100) * 4,
+      ang0: (seed(i + 200) - 0.5) * 0.5,
+      size: 6 + seed(i + 300) * 3,
+      delay: seed(i + 400) * 0.35
+    });
+  }
+
+  // 8 Elektronen, ursprünglich auf der Wolle verteilt — wandern beim Reiben
+  // zum Ballon. Positionen relativ zum Wolltuch-Mittelpunkt.
+  const ELEKTRONEN_BASIS = [];
+  for (let i = 0; i < 8; i++) {
+    ELEKTRONEN_BASIS.push({
+      // Ausgangsposition auf dem Wolltuch (relativ zu WOLLE_X/Y)
+      wx: (seed(i + 700) - 0.5) * 80,
+      wy: (seed(i + 800) - 0.5) * 40,
+      // Zielposition am Ballon (relativ zum Ballon-Mittelpunkt)
+      bx: (seed(i + 900) - 0.5) * 50,
+      by: (seed(i + 1000) - 0.5) * 60,
+      delay: seed(i + 1100) * 0.4
+    });
+  }
+
+  const state = {
+    t: 0,
+    playing: false,
+    lastFrameTs: 0
+  };
+
+  function phaseOf(t) {
+    if (t < 0.05) return { name: 'idle', local: 0 };
+    if (t < 0.30) return { name: 'approach', local: (t - 0.05) / 0.25 };
+    if (t < 0.55) return { name: 'rub',      local: (t - 0.30) / 0.25 };
+    if (t < 0.75) return { name: 'travel',   local: (t - 0.55) / 0.20 };
+    return         { name: 'attract',  local: (t - 0.75) / 0.25 };
+  }
+  function easeOut(t) { return 1 - (1 - t) * (1 - t); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function drawTisch() {
+    ctx.fillStyle = '#A0825F';
+    ctx.fillRect(0, TISCH_Y, W, H - TISCH_Y);
+    ctx.fillStyle = '#8B6F4E';
+    ctx.fillRect(0, TISCH_Y, W, 4);
+  }
+  function drawWolltuch(x, y) {
+    ctx.fillStyle = '#A85939';
+    ctx.beginPath();
+    ctx.moveTo(x - 60, y + 30);
+    ctx.lineTo(x - 60, y - 25);
+    ctx.quadraticCurveTo(x - 55, y - 35, x - 35, y - 32);
+    ctx.lineTo(x + 35, y - 32);
+    ctx.quadraticCurveTo(x + 55, y - 35, x + 60, y - 25);
+    ctx.lineTo(x + 60, y + 30);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#7A4128';
+    ctx.lineWidth = 1;
+    for (let i = -50; i < 50; i += 8) {
+      ctx.beginPath();
+      ctx.moveTo(x + i, y - 28);
+      ctx.lineTo(x + i + 3, y + 25);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#3A1F12';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Wolltuch', x, y + 55);
+  }
+  function drawBallon(x, y) {
+    ctx.fillStyle = '#D32F2F';
+    ctx.beginPath();
+    ctx.ellipse(x, y, 45, 55, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(x - 15, y - 20, 10, 16, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#A0241D';
+    ctx.beginPath();
+    ctx.moveTo(x - 5, y + 53);
+    ctx.lineTo(x + 5, y + 53);
+    ctx.lineTo(x + 3, y + 60);
+    ctx.lineTo(x - 3, y + 60);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x, y + 60);
+    ctx.quadraticCurveTo(x - 10, y + 80, x - 5, y + 100);
+    ctx.stroke();
+  }
+  function drawSchnipsel(s, x, y, ang) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(ang);
+    ctx.fillStyle = '#FAFAFA';
+    ctx.strokeStyle = '#B8B8B8';
+    ctx.lineWidth = 0.6;
+    ctx.fillRect(-s.size/2, -s.size/2, s.size, s.size * 0.7);
+    ctx.strokeRect(-s.size/2, -s.size/2, s.size, s.size * 0.7);
+    ctx.restore();
+  }
+  // Einzelnes Elektron: kleiner blauer Kreis mit Minus-Zeichen
+  function drawElektron(x, y) {
+    ctx.fillStyle = '#1a4d8f';
+    ctx.beginPath();
+    ctx.arc(x, y, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('−', x, y);
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  function draw() {
+    const t = state.t;
+    const ph = phaseOf(t);
+
+    ctx.clearRect(0, 0, W, H);
+    drawTisch();
+    drawWolltuch(WOLLE_X, WOLLE_Y);
+
+    // Ballon-Position
+    let bx = BALLON_START_X, by = BALLON_START_Y;
+    if (ph.name === 'idle') {
+      bx = BALLON_START_X; by = BALLON_START_Y;
+    } else if (ph.name === 'approach') {
+      const targetX = WOLLE_X + 80;
+      bx = lerp(BALLON_START_X, targetX, easeOut(ph.local));
+      by = BALLON_START_Y;
+    } else if (ph.name === 'rub') {
+      bx = WOLLE_X + 80 + Math.sin(ph.local * Math.PI * 8) * 22;
+      by = BALLON_START_Y;
+    } else if (ph.name === 'travel') {
+      bx = lerp(WOLLE_X + 80, BALLON_OVER_X, easeOut(ph.local));
+      by = lerp(BALLON_START_Y, BALLON_OVER_Y, easeOut(ph.local));
+    } else {
+      bx = BALLON_OVER_X; by = BALLON_OVER_Y;
+    }
+
+    // Schnipsel
+    SCHNIPSEL_BASIS.forEach((s, i) => {
+      let sx = s.bx, sy = s.by, ang = s.ang0;
+      if (ph.name === 'attract') {
+        const localT = Math.max(0, Math.min(1, (ph.local - s.delay) / (1 - s.delay)));
+        const ziehBis = easeOut(localT);
+        sx = lerp(s.bx, bx + (seed(i + 500) - 0.5) * 30, ziehBis);
+        sy = lerp(s.by, by + 30 + seed(i + 600) * 15, ziehBis);
+        ang = s.ang0 + ziehBis * 1.8;
+      }
+      drawSchnipsel(s, sx, sy, ang);
+    });
+
+    drawBallon(bx, by);
+
+    // ===== ELEKTRONEN =====
+    // Vor dem Reiben: alle auf dem Wolltuch
+    // Während Reiben: progressiv auf den Ballon (jedes mit eigener Verzögerung)
+    // Nach Reiben: alle auf dem Ballon, wandern mit
+    ELEKTRONEN_BASIS.forEach((e, i) => {
+      const startX = WOLLE_X + e.wx;
+      const startY = WOLLE_Y + e.wy;
+      const endX = bx + e.bx;
+      const endY = by + e.by;
+
+      let ex, ey;
+      if (ph.name === 'idle' || ph.name === 'approach') {
+        ex = startX; ey = startY;
+      } else if (ph.name === 'rub') {
+        // Während Reiben: Elektronen wandern progressiv von Wolle zum Ballon
+        const localT = Math.max(0, Math.min(1, (ph.local - e.delay) / (1 - e.delay)));
+        const k = easeOut(localT);
+        ex = lerp(startX, endX, k);
+        ey = lerp(startY, endY, k);
+      } else {
+        // travel + attract: Elektronen sitzen am Ballon und wandern mit
+        ex = endX; ey = endY;
+      }
+      drawElektron(ex, ey);
+    });
+
+    // Beschriftung Schnipsel
+    ctx.fillStyle = '#3A1F12';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    if (ph.name === 'idle' || ph.name === 'approach') {
+      ctx.fillText('Papierschnipsel', SCHNIPSEL_X, SCHNIPSEL_Y + 22);
+    }
+
+    // Status-Text oben — im PDF-Modus weglassen
+    if (!window._abPdfModus) {
+      ctx.fillStyle = '#1A3A5C';
+      ctx.font = 'bold 13px Arial';
+      ctx.textAlign = 'left';
+      let status = '';
+      if (ph.name === 'idle')     status = '1) Beide Körper sind ungeladen — gleich viele + und −.';
+      if (ph.name === 'approach') status = '2) Der Ballon nähert sich dem Wolltuch …';
+      if (ph.name === 'rub')      status = '3) Beim Reiben wandern Elektronen von der Wolle auf den Ballon.';
+      if (ph.name === 'travel')   status = '4) Der Ballon ist nun negativ geladen (Elektronenüberschuss).';
+      if (ph.name === 'attract')  status = '5) Die negativen Ladungen ziehen die Schnipsel an.';
+      ctx.fillText(status, 20, 25);
+    }
+
+    if (scrub && !scrub._dragging) {
+      scrub.value = Math.round(t * 1000);
+    }
+  }
+
+  const PLAY_DURATION = 9000; // etwas länger, damit man die Elektronen sieht
+  function tick(now) {
+    if (!state.playing) return;
+    const dt = (now - state.lastFrameTs) / PLAY_DURATION;
+    state.lastFrameTs = now;
+    state.t = Math.min(1, state.t + dt);
+    draw();
+    if (state.t >= 1) { state.playing = false; return; }
+    requestAnimationFrame(tick);
+  }
+  function play() {
+    if (state.t >= 1) state.t = 0;
+    state.playing = true;
+    state.lastFrameTs = performance.now();
+    requestAnimationFrame(tick);
+  }
+  function reset() {
+    state.t = 0;
+    state.playing = false;
+    if (scrub) scrub.value = 0;
+    draw();
+  }
+
+  if (scrub) {
+    scrub.addEventListener('input', () => {
+      scrub._dragging = true;
+      state.playing = false;
+      state.t = parseInt(scrub.value, 10) / 1000;
+      draw();
+    });
+    scrub.addEventListener('change', () => { scrub._dragging = false; });
+    scrub.addEventListener('pointerup', () => { scrub._dragging = false; });
+  }
+
+  draw();
+  return { rub: play, reset, draw };
+})();
+
+/* Sim-Buttons binden */
+document.querySelectorAll('[data-action]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const a = btn.dataset.action;
+    if (a === 'ballon-rub') ballon.rub();
+    if (a === 'ballon-reset') ballon.reset();
+    if (a === 'atom-animate') atomSim.animate();
+    if (a === 'atom-reset') atomSim.reset();
+    if (a === 'ballon-e-rub') ballonE.rub();
+    if (a === 'ballon-e-reset') ballonE.reset();
+  });
+});
+
+/* ENGINE */
+ABEngine.init({
+  modulKey: 'ab.reibungselektrizitaet.v7',
+  aufgabenAnzahl: 3,
+  quizPool: window.GRUNDWISSEN_POOL
+});
+
+/* PDF */
+// Hilfsfunktion: setzt eine Sim per Slider auf den gegebenen Verlaufs-Wert
+// (0..1) und löst das input-Event aus, damit die Sim sich neu zeichnet.
+// Wird vor dem PDF-Snapshot genutzt, damit die Endzustände abgebildet werden
+// (Ballon mit Schnipseln, Elektronen sichtbar etc.).
+function setSimZuVerlauf(scrubId, t) {
+  const scrub = document.getElementById(scrubId);
+  if (!scrub) return;
+  scrub.value = Math.round(t * 1000);
+  scrub.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+document.getElementById('btn-export-pdf').addEventListener('click', () => {
+  // Sims auf "Erklär-Endzustand" bringen, damit Snapshots aussagekräftig sind.
+  // Den globalen pdfModus aktivieren, damit Sims keine Status-Texte zeichnen.
+  window._abPdfModus = true;
+  setSimZuVerlauf('scrub-ballon', 0);     // Aufbau zeigen (klare Komposition)
+  setSimZuVerlauf('scrub-atom', 1);       // Elektronen bei Thomson sichtbar
+  setSimZuVerlauf('scrub-ballon-e', 1);   // Ballon mit Elektronen, geladen
+
+  ABPdf.export({
+    titel: 'Reibungselektrizität',
+    untertitel: 'Was passiert mit den Atomen?',
+    klasse: '8c',
+    datum: '5. Mai 2026',
+    dateiname: 'Reibungselektrizitaet_Klasse_8c.pdf',
+    inhalt: (h) => {
+      h.section('Der Versuch');
+      h.simSnapshot(document.getElementById('sim-ballon'),
+        'Abb. 1 · Versuchsaufbau',
+        'Luftballon, Wolltuch und Papierschnipsel.');
+      h.paragraph('Beobachtung: Nach dem Reiben zieht der Luftballon die Papierschnipsel an — sie springen zum Ballon und bleiben kurz daran kleben.');
+
+      h.infoBox('Problem mit Daltons Atommodell: Nach Dalton sind Atome winzige, unteilbare und ungeladene Kugeln. Damit lassen sich unsere Beobachtungen aber nicht erklären — beim Reiben muss zwischen Ballon und Wolltuch etwas passieren, das eine Ladung erzeugt.');
+
+      h.section('Aufgabe 1 – Thomson löst das Rätsel');
+      h.paragraph('Der englische Physiker J. J. Thomson zeigte 1897, dass es in jedem Atom kleinste, negativ geladene und bewegliche Teilchen gibt — die Elektronen. Da Atome nach außen hin aber ungeladen sind, muss der restliche Teil des Atoms positiv geladen sein und die negative Ladung der Elektronen ausgleichen.', { italic: true, muted: true });
+      h.paragraph('Später zeigte sich: Auch dieser positiv geladene Teil besteht aus kleinsten Teilchen — den Protonen. Sie tragen jeweils eine positive Ladung und haben eine deutlich größere Masse als Elektronen.', { italic: true, muted: true });
+      h.simSnapshot(document.getElementById('sim-atom'),
+        'Abb. 2 · Atommodelle im Vergleich',
+        'Links Dalton, rechts Thomson mit eingebetteten Elektronen.');
+      h.aufgabe('a)', 'Beschreibe', 'die Unterschiede zwischen dem Atommodell nach Dalton und dem Atommodell nach Thomson.');
+      h.canvasFeld('a1a');
+      h.aufgabe('b)', 'Begründe,', 'warum Atome nach Thomsons Erkenntnis nicht mehr als „unteilbar" gelten können.');
+      h.canvasFeld('a1b');
+
+      h.section('Aufgabe 2 – Zurück zum Luftballon');
+      h.simSnapshot(document.getElementById('sim-ballon-e'),
+        'Abb. 3 · Versuch mit Elektronen',
+        'Beim Reiben wandern Elektronen von der Wolle auf den Ballon — er wird negativ geladen.');
+      h.aufgabe('a)', 'Erkläre', 'mithilfe der neuen Erkenntnisse, was beim Reiben des Luftballons passiert. Verwende Elektronen, Protonen, positiv und negativ geladen.');
+      h.canvasFeld('a2a');
+
+      h.section('Aufgabe 3 – Merksatz');
+      h.aufgabe('a)', 'Formuliere', 'einen eigenen Merksatz. Erkläre darin, was Elektronen sind (Ladung, Beweglichkeit, Masse) und woraus ein Atom besteht.');
+      h.canvasFeld('a3a');
+    }
+  }).finally(() => {
+    // PDF-Modus deaktivieren und Sims wieder normal zeichnen lassen.
+    window._abPdfModus = false;
+    setSimZuVerlauf('scrub-ballon', 0);
+    setSimZuVerlauf('scrub-atom', 0);
+    setSimZuVerlauf('scrub-ballon-e', 0);
+  });
+});
+</script>
+
+</body>
+</html>
