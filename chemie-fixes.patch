@@ -1,0 +1,338 @@
+diff --git a/SCORM Chemie Portal 8.Klasse/8c/ab/rutherford.html b/SCORM Chemie Portal 8.Klasse/8c/ab/rutherford.html
+--- a/SCORM Chemie Portal 8.Klasse/8c/ab/rutherford.html	
++++ b/SCORM Chemie Portal 8.Klasse/8c/ab/rutherford.html	
+@@ -256,10 +256,10 @@
+ 
+   <div class="aufgabe-block" data-aufgabe="2" hidden>
+     <h2 class="section">Aufgabe 2 — Was passiert auf Teilchen-Ebene?</h2>
+-    <p class="lead"><strong>Versuch:</strong> Wir lösen <strong>Salz</strong> in destilliertem Wasser und prüfen, ob Strom fließt. Dasselbe machen wir mit <strong>Zucker</strong>.</p>
+-    <p class="lead"><strong>Beobachtung:</strong> Die Lampe leuchtet bei der <strong>Salz</strong>lösung — bei der <strong>Zucker</strong>lösung und reinem destilliertem Wasser leuchtet sie <strong>nicht</strong>.</p>
++    <p class="lead"><strong>Versuch:</strong> Wir bauen einen Stromkreis mit einem kleinen <strong>Ventilator</strong> als Verbraucher und tauchen die Elektroden in verschiedene Flüssigkeiten ein. Getestet werden <strong>destilliertes Wasser</strong>, <strong>Zuckerwasser</strong> und <strong>Leitungswasser</strong>. Danach geben wir noch <strong>Salz</strong> in eines der anderen Gläser.</p>
++    <p class="lead"><strong>Beobachtung:</strong> Der Ventilator läuft <strong>nicht</strong> bei destilliertem Wasser, auch <strong>nicht</strong> bei Zuckerwasser. Er läuft aber bei <strong>Leitungswasser</strong> — und sobald wir <strong>Salz</strong> ins destillierte oder Zuckerwasser geben, läuft er dort ebenfalls los.</p>
+     <div class="info-box">
+-      In der Salzlösung gibt es <strong>Ionen</strong> — geladene Teilchen. In der Zuckerlösung sind die Teilchen <strong>Moleküle</strong> — Verbünde aus mehreren Atomen.
++      In der Salzlösung — und auch im Leitungswasser, das gelöste Salze enthält — gibt es <strong>Ionen</strong> (geladene Teilchen). In der Zuckerlösung sind die Teilchen dagegen <strong>Moleküle</strong> — Verbünde aus mehreren Atomen, ungeladen.
+     </div>
+ 
+     <p class="lead">Die Animation zeigt, was beim Lösen <em>auf Teilchen-Ebene</em> passiert. Klicke auf einen der Buttons:</p>
+@@ -1041,28 +1041,28 @@ document.getElementById('btn-export-pdf').addEventListener('click', () => {
+     dateiname: 'Kern-Huelle-Verbindungsklassen_Klasse_8c.pdf',
+     inhalt: (h) => {
+       h.section('Rutherfords Streuversuch (1909)');
+-      h.paragraph('Aufbau: α-Quelle, Blende, Goldfolie, ringförmiger Leuchtschirm.');
++      h.paragraph('Aufbau: Alpha-Quelle, Blende, Goldfolie, ringförmiger Leuchtschirm.');
+       h.simSnapshotPair(
+         document.getElementById('sim-erwartung'),
+-        'Abb. 1 · Erwartung nach Thomson',
+-        'Bei gleichmäßig verteilter Ladung: alle α-Teilchen geradeaus durch.',
++        'Abb. 1 — Erwartung nach Thomson',
++        'Bei gleichmäßig verteilter Ladung: alle Alpha-Teilchen geradeaus durch.',
+         document.getElementById('sim-realitaet'),
+-        'Abb. 2 · Tatsächliches Ergebnis',
++        'Abb. 2 — Tatsächliches Ergebnis',
+         'Die meisten fliegen durch — einige werden stark abgelenkt, wenige fast zurückgeworfen.'
+       );
+ 
+-      h.section('Aufgabe 1 – Das Kern-Hülle-Modell');
+-      h.infoBox('Atomkern (winzig, schwer, positiv geladen) + Atomhülle (groß, fast leer, mit Elektronen). Hülle ist 100 000-mal größer als der Kern. Bausteine: Proton (+1, 1u, Kern), Neutron (0, 1u, Kern), Elektron (-1, ≈0,0005u, Hülle).');
++      h.section('Aufgabe 1 — Das Kern-Hülle-Modell');
++      h.infoBox('Atomkern (winzig, schwer, positiv geladen) + Atomhülle (groß, fast leer, mit Elektronen). Hülle ist 100 000-mal größer als der Kern. Bausteine: Proton (+1, 1u, Kern), Neutron (0, 1u, Kern), Elektron (-1, ca. 0,0005u, Hülle).');
+       h.aufgabe(1, 'Skizziere', 'ein Atom nach dem Kern-Hülle-Modell. Beschrifte: Atomkern, Atomhülle, Proton, Neutron, Elektron.');
+       h.canvasFeld('r2a');
+ 
+-      h.section('Aufgabe 2 – Was passiert auf Teilchen-Ebene?');
+-      h.paragraph('Versuch: Salz in Wasser, Zucker in Wasser, reines destilliertes Wasser. Beobachtung: Lampe leuchtet nur bei Salzlösung.');
+-      h.infoBox('In der Salzlösung gibt es Ionen (geladene Teilchen). In der Zuckerlösung sind die Teilchen Moleküle (Verbünde aus mehreren Atomen, ungeladen).');
++      h.section('Aufgabe 2 — Was passiert auf Teilchen-Ebene?');
++      h.paragraph('Versuch: Wir testen mit einem Stromkreis und einem Ventilator, ob die Flüssigkeit Strom leitet. Getestet werden destilliertes Wasser, Zuckerwasser und Leitungswasser. Anschließend geben wir Salz hinzu. Beobachtung: Der Ventilator läuft NICHT bei destilliertem Wasser und NICHT bei Zuckerwasser. Er läuft bei Leitungswasser — und sobald wir Salz in eines der anderen geben, läuft er auch dort.');
++      h.infoBox('In der Salzlösung (und im Leitungswasser, das gelöste Salze enthält) gibt es Ionen — geladene Teilchen. In der Zuckerlösung sind die Teilchen Moleküle (Verbünde aus mehreren Atomen, ungeladen).');
+       h.simSnapshot(document.getElementById('sim-loesen'),
+-                    'Abb. 3 · Salz vs. Zucker im Wasser',
++                    'Abb. 3 — Salz vs. Zucker im Wasser',
+                     'Salz zerfällt in Ionen, Zucker bleibt als Moleküle.');
+-      h.aufgabe(2, 'Beschreibe und erkläre', 'mithilfe der Animation, warum Salzwasser den Strom leitet — Zuckerwasser aber nicht.');
++      h.aufgabe(2, 'Beschreibe und erkläre', 'mithilfe der Animation, warum Salzwasser und Leitungswasser den Strom leiten — destilliertes Wasser und Zuckerwasser aber nicht.');
+       h.canvasFeld('r4a');
+ 
+       // Aufgabe 3: auf eigener Seite, damit Mindmap am Stück bleibt
+diff --git a/SCORM Chemie Portal 8.Klasse/shared/ab-engine.js b/SCORM Chemie Portal 8.Klasse/shared/ab-engine.js
+--- a/SCORM Chemie Portal 8.Klasse/shared/ab-engine.js	
++++ b/SCORM Chemie Portal 8.Klasse/shared/ab-engine.js	
+@@ -94,8 +94,16 @@ function setupCanvas(wrap) {
+     wrap.insertBefore(puffer, toolbar);
+   }
+ 
++  // Offscreen-Canvas, auf dem nur die Stift-Striche liegen. Eraser-Striche
++  // arbeiten dort mit destination-out, sodass darunterliegende Stift-Striche
++  // wirklich entfernt werden — und nicht die Karo-Linien des Hintergrunds
++  // mit überpinselt werden. Komposition: Hintergrund (weiß+Karo) + Marks.
++  const marksCanvas = document.createElement('canvas');
++  const marksCtx = marksCanvas.getContext('2d', { willReadFrequently: false });
++
+   const state = {
+     canvas, ctx,
++    marksCanvas, marksCtx,
+     drawing: false,
+     activePointerId: null,
+     lastWidth: 1.0,
+@@ -134,110 +142,175 @@ function setupCanvas(wrap) {
+     canvas.width = Math.round(cssW * dpr);
+     canvas.height = Math.round(state.height * dpr);
+     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+-    ctx.fillStyle = '#FFFFFF';
+-    ctx.fillRect(0, 0, cssW, state.height);
+-    zeichneKaroHintergrund(cssW, state.height);
+     ctx.lineCap = 'round';
+     ctx.lineJoin = 'round';
+-    ctx.strokeStyle = stiftFarbe;
++
++    marksCanvas.width = canvas.width;
++    marksCanvas.height = canvas.height;
++    marksCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
++    marksCtx.lineCap = 'round';
++    marksCtx.lineJoin = 'round';
++
+     redraw();
+   }
+ 
+-  function redraw() {
+-    const w = canvas.width / (window.devicePixelRatio || 1);
+-    const h = canvas.height / (window.devicePixelRatio || 1);
++  function zeichneHintergrund() {
++    const dpr = window.devicePixelRatio || 1;
++    const w = canvas.width / dpr;
++    const h = canvas.height / dpr;
+     ctx.fillStyle = '#FFFFFF';
+     ctx.fillRect(0, 0, w, h);
+     zeichneKaroHintergrund(w, h);
+-    ctx.lineCap = 'round';
+-    ctx.lineJoin = 'round';
++  }
++
++  function compositeMarks() {
++    const dpr = window.devicePixelRatio || 1;
++    ctx.save();
++    ctx.setTransform(1, 0, 0, 1, 0, 0);
++    ctx.drawImage(marksCanvas, 0, 0);
++    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
++    ctx.restore();
++  }
++
++  function clearMarksLayer() {
++    const dpr = window.devicePixelRatio || 1;
++    marksCtx.save();
++    marksCtx.setTransform(1, 0, 0, 1, 0, 0);
++    marksCtx.clearRect(0, 0, marksCanvas.width, marksCanvas.height);
++    marksCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
++    marksCtx.restore();
++  }
++
++  function isErase(path) {
++    return path && path.color === '#FFFFFF';
++  }
++
++  function redraw() {
++    clearMarksLayer();
++    const mctx = marksCtx;
++    mctx.lineCap = 'round';
++    mctx.lineJoin = 'round';
+     state.paths.forEach(path => {
+       if (!path || path.length < 1) return;
+-      ctx.strokeStyle = path.color || '#1A3A5C';
++      if (isErase(path)) {
++        mctx.globalCompositeOperation = 'destination-out';
++        mctx.strokeStyle = '#000';
++        mctx.fillStyle = '#000';
++      } else {
++        mctx.globalCompositeOperation = 'source-over';
++        mctx.strokeStyle = path.color || '#1A3A5C';
++        mctx.fillStyle = path.color || '#1A3A5C';
++      }
+       if (path.length === 1) {
+-        ctx.fillStyle = path.color || '#1A3A5C';
+-        ctx.beginPath();
+-        ctx.arc(path[0].x, path[0].y, path[0].w / 2, 0, Math.PI * 2);
+-        ctx.fill();
++        mctx.beginPath();
++        mctx.arc(path[0].x, path[0].y, path[0].w / 2, 0, Math.PI * 2);
++        mctx.fill();
+         return;
+       }
+       const n = path.length;
+       for (let i = 1; i < n; i++) {
+         const relPos = i / (n - 1);
+         let taper = 1.0;
+         if (relPos < 0.15) taper = 0.55 + (relPos / 0.15) * 0.45;
+         else if (relPos > 0.85) taper = 0.55 + ((1 - relPos) / 0.15) * 0.45;
+-        ctx.lineWidth = path[i].w * taper;
+-        ctx.beginPath();
++        mctx.lineWidth = path[i].w * taper;
++        mctx.beginPath();
+         if (i === 1) {
+-          ctx.moveTo(path[0].x, path[0].y);
++          mctx.moveTo(path[0].x, path[0].y);
+           if (n >= 3) {
+             const m = { x: (path[0].x + path[1].x) / 2, y: (path[0].y + path[1].y) / 2 };
+-            ctx.lineTo(m.x, m.y);
++            mctx.lineTo(m.x, m.y);
+           } else {
+-            ctx.lineTo(path[1].x, path[1].y);
++            mctx.lineTo(path[1].x, path[1].y);
+           }
+         } else if (i === n - 1) {
+           const m = { x: (path[i-1].x + path[i-2].x) / 2, y: (path[i-1].y + path[i-2].y) / 2 };
+-          ctx.moveTo(m.x, m.y);
+-          ctx.quadraticCurveTo(path[i-1].x, path[i-1].y, path[i].x, path[i].y);
++          mctx.moveTo(m.x, m.y);
++          mctx.quadraticCurveTo(path[i-1].x, path[i-1].y, path[i].x, path[i].y);
+         } else {
+           const m1 = { x: (path[i-2].x + path[i-1].x) / 2, y: (path[i-2].y + path[i-1].y) / 2 };
+           const m2 = { x: (path[i-1].x + path[i].x) / 2, y: (path[i-1].y + path[i].y) / 2 };
+-          ctx.moveTo(m1.x, m1.y);
+-          ctx.quadraticCurveTo(path[i-1].x, path[i-1].y, m2.x, m2.y);
++          mctx.moveTo(m1.x, m1.y);
++          mctx.quadraticCurveTo(path[i-1].x, path[i-1].y, m2.x, m2.y);
+         }
+-        ctx.stroke();
++        mctx.stroke();
+       }
+     });
++    mctx.globalCompositeOperation = 'source-over';
++    zeichneHintergrund();
++    compositeMarks();
+   }
+ 
+   function flushFrame() {
+     state.rafId = null;
+     if (!state.currentPath) return;
+     const path = state.currentPath;
+-    ctx.strokeStyle = path.color || stiftFarbe;
++    const erase = isErase(path);
++    if (erase) {
++      marksCtx.globalCompositeOperation = 'destination-out';
++      marksCtx.strokeStyle = '#000';
++    } else {
++      marksCtx.globalCompositeOperation = 'source-over';
++      marksCtx.strokeStyle = path.color || stiftFarbe;
++    }
++    let veraendert = false;
+     while (state.pendingPoints.length > 0) {
+       const punkt = state.pendingPoints.shift();
+       path.push(punkt);
+       const n = path.length;
+       if (n === 2) {
+         const p0 = path[0], p1 = path[1];
+-        ctx.beginPath();
+-        ctx.lineWidth = p1.w;
+-        ctx.moveTo(p0.x, p0.y);
+-        ctx.lineTo(p1.x, p1.y);
+-        ctx.stroke();
++        marksCtx.beginPath();
++        marksCtx.lineWidth = p1.w;
++        marksCtx.moveTo(p0.x, p0.y);
++        marksCtx.lineTo(p1.x, p1.y);
++        marksCtx.stroke();
++        veraendert = true;
+       } else if (n === 3) {
+         const m1 = { x: (path[0].x + path[1].x) / 2, y: (path[0].y + path[1].y) / 2 };
+         const m2 = { x: (path[1].x + path[2].x) / 2, y: (path[1].y + path[2].y) / 2 };
+-        ctx.beginPath();
+-        ctx.lineWidth = path[1].w;
+-        ctx.moveTo(m1.x, m1.y);
+-        ctx.quadraticCurveTo(path[1].x, path[1].y, m2.x, m2.y);
+-        ctx.stroke();
++        marksCtx.beginPath();
++        marksCtx.lineWidth = path[1].w;
++        marksCtx.moveTo(m1.x, m1.y);
++        marksCtx.quadraticCurveTo(path[1].x, path[1].y, m2.x, m2.y);
++        marksCtx.stroke();
++        veraendert = true;
+       } else if (n >= 4) {
+         const cp = catmullRomToBezier(path[n-4], path[n-3], path[n-2], path[n-1]);
+-        ctx.beginPath();
+-        ctx.lineWidth = path[n-2].w;
+-        ctx.moveTo(path[n-3].x, path[n-3].y);
+-        ctx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, path[n-2].x, path[n-2].y);
+-        ctx.stroke();
++        marksCtx.beginPath();
++        marksCtx.lineWidth = path[n-2].w;
++        marksCtx.moveTo(path[n-3].x, path[n-3].y);
++        marksCtx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, path[n-2].x, path[n-2].y);
++        marksCtx.stroke();
++        veraendert = true;
+       }
+     }
++    marksCtx.globalCompositeOperation = 'source-over';
++    if (veraendert) {
++      zeichneHintergrund();
++      compositeMarks();
++    }
+   }
+ 
+   function getPos(e) {
+     const rect = canvas.getBoundingClientRect();
+-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
++    const dpr = window.devicePixelRatio || 1;
++    const cssCanvasW = canvas.width / dpr;
++    const cssCanvasH = canvas.height / dpr;
++    const sx = rect.width  > 0 ? (cssCanvasW / rect.width)  : 1;
++    const sy = rect.height > 0 ? (cssCanvasH / rect.height) : 1;
++    return {
++      x: (e.clientX - rect.left) * sx,
++      y: (e.clientY - rect.top)  * sy
++    };
+   }
+ 
+   function start(e) {
+@@ -266,10 +339,19 @@ function setupCanvas(wrap) {
+     state.currentPath = [{x: pos.x, y: pos.y, w: state.lastWidth}];
+     state.currentPath.color = stiftFarbe;
+ 
+-    ctx.beginPath();
+-    ctx.fillStyle = stiftFarbe;
+-    ctx.arc(pos.x, pos.y, state.lastWidth / 2, 0, Math.PI * 2);
+-    ctx.fill();
++    if (isErase(state.currentPath)) {
++      marksCtx.globalCompositeOperation = 'destination-out';
++      marksCtx.fillStyle = '#000';
++    } else {
++      marksCtx.globalCompositeOperation = 'source-over';
++      marksCtx.fillStyle = stiftFarbe;
++    }
++    marksCtx.beginPath();
++    marksCtx.arc(pos.x, pos.y, state.lastWidth / 2, 0, Math.PI * 2);
++    marksCtx.fill();
++    marksCtx.globalCompositeOperation = 'source-over';
++    zeichneHintergrund();
++    compositeMarks();
+   }
+ 
+   function move(e) {
+@@ -327,11 +409,22 @@ function setupCanvas(wrap) {
+       const p1 = path[n-2];
+       const p2 = path[n-1];
+       const m1 = { x: (path[n-3].x + p1.x) / 2, y: (path[n-3].y + p1.y) / 2 };
+-      ctx.beginPath();
+-      ctx.lineWidth = p2.w;
+-      ctx.moveTo(m1.x, m1.y);
+-      ctx.quadraticCurveTo(p1.x, p1.y, p2.x, p2.y);
+-      ctx.stroke();
++      const erase = isErase(path);
++      if (erase) {
++        marksCtx.globalCompositeOperation = 'destination-out';
++        marksCtx.strokeStyle = '#000';
++      } else {
++        marksCtx.globalCompositeOperation = 'source-over';
++        marksCtx.strokeStyle = path.color || stiftFarbe;
++      }
++      marksCtx.beginPath();
++      marksCtx.lineWidth = p2.w;
++      marksCtx.moveTo(m1.x, m1.y);
++      marksCtx.quadraticCurveTo(p1.x, p1.y, p2.x, p2.y);
++      marksCtx.stroke();
++      marksCtx.globalCompositeOperation = 'source-over';
++      zeichneHintergrund();
++      compositeMarks();
+     }
+ 
+     state.drawing = false;
