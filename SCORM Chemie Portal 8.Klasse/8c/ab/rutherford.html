@@ -1040,16 +1040,30 @@ document.getElementById('btn-export-pdf').addEventListener('click', () => {
     datum: '7. Mai 2026',
     dateiname: 'Kern-Huelle-Verbindungsklassen_Klasse_8c.pdf',
     inhalt: (h) => {
-      h.section('Rutherfords Streuversuch (1909)');
-      h.paragraph('Aufbau: α-Quelle, Blende, Goldfolie, ringförmiger Leuchtschirm.');
+            h.section('Rutherfords Streuversuch (1909)');
+      h.paragraph('Aufbau: Alpha-Quelle, Blende, Goldfolie, ringförmiger Leuchtschirm.');
       h.simSnapshotPair(
         document.getElementById('sim-erwartung'),
-        'Abb. 1 · Erwartung nach Thomson',
-        'Bei gleichmäßig verteilter Ladung: alle α-Teilchen geradeaus durch.',
+        'Abb. 1 — Erwartung nach Thomson',
+        'Bei gleichmäßig verteilter Ladung: alle Alpha-Teilchen geradeaus durch.',
         document.getElementById('sim-realitaet'),
-        'Abb. 2 · Tatsächliches Ergebnis',
+        'Abb. 2 — Tatsächliches Ergebnis',
         'Die meisten fliegen durch — einige werden stark abgelenkt, wenige fast zurückgeworfen.'
       );
+
+      h.section('Aufgabe 1 — Das Kern-Hülle-Modell');
+      h.infoBox('Atomkern (winzig, schwer, positiv geladen) + Atomhülle (groß, fast leer, mit Elektronen). Hülle ist 100 000-mal größer als der Kern. Bausteine: Proton (+1, 1u, Kern), Neutron (0, 1u, Kern), Elektron (-1, ca. 0,0005u, Hülle).');
+      h.aufgabe(1, 'Skizziere', 'ein Atom nach dem Kern-Hülle-Modell. Beschrifte: Atomkern, Atomhülle, Proton, Neutron, Elektron.');
+      h.canvasFeld('r2a');
+
+      h.section('Aufgabe 2 — Was passiert auf Teilchen-Ebene?');
+      h.paragraph('Versuch: Wir testen mit einem Stromkreis und einem Ventilator, ob die Flüssigkeit Strom leitet. Getestet werden destilliertes Wasser, Zuckerwasser und Leitungswasser. Anschließend geben wir Salz hinzu. Beobachtung: Der Ventilator läuft NICHT bei destilliertem Wasser und NICHT bei Zuckerwasser. Er läuft bei Leitungswasser — und sobald wir Salz in eines der anderen geben, läuft er auch dort.');
+      h.infoBox('In der Salzlösung (und im Leitungswasser, das gelöste Salze enthält) gibt es Ionen — geladene Teilchen. In der Zuckerlösung sind die Teilchen Moleküle (Verbünde aus mehreren Atomen, ungeladen).');
+      h.simSnapshot(document.getElementById('sim-loesen'),
+                    'Abb. 3 — Salz vs. Zucker im Wasser',
+                    'Salz zerfällt in Ionen, Zucker bleibt als Moleküle.');
+      h.aufgabe(2, 'Beschreibe und erkläre', 'mithilfe der Animation, warum Salzwasser und Leitungswasser den Strom leiten — destilliertes Wasser und Zuckerwasser aber nicht.');
+      h.canvasFeld('r4a');
 
       h.section('Aufgabe 1 – Das Kern-Hülle-Modell');
       h.infoBox('Atomkern (winzig, schwer, positiv geladen) + Atomhülle (groß, fast leer, mit Elektronen). Hülle ist 100 000-mal größer als der Kern. Bausteine: Proton (+1, 1u, Kern), Neutron (0, 1u, Kern), Elektron (-1, ≈0,0005u, Hülle).');
